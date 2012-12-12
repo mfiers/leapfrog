@@ -1,0 +1,51 @@
+LeapFrog
+========
+
+A set of tools that allows the genomic localization of (flanking
+regions of) repetitive elements based on read-pair information.
+
+analysis steps & data sets are:
+
+* (1) input fastq
+  The paired-end fastq files generated from the organism that you are
+  interested in. This MUST be paired end!
+* (2) reference fasta
+  Contains the genome reference sequence
+* (3) element_database
+  The database is a multi-fasta file elements that are to be
+  located. The software expects the sequence headers to have the
+  following format: `>NAME#FAMILY`
+* (4) bowtie2db for the reference fasta
+  bowtie2 database based on (2)
+* (5) bowtie2db for the element database  
+  bowtie2 database based on (3)
+* (6) get danglers
+  the leapfrog script `lf_danglers` will run bowtie2 in the background
+  and output a properly renamed fastq file containing the
+  "danglers". A "dangler" is a read that does not map to the element
+  database (3), but it's paired end mate does!
+
+                             ____
+                            /    \
+                       =====      =====   <- dangler
+        +==================+      
+        | ELEMENT DATABASE |
+        +==================+
+  
+  
+
+  Check how to run the script using the `-h` parameter. This script
+  takes as input the element bowtie2 database (5) and the input fastq
+  (1).
+
+
+
+* (7) map the danglers to the reference genome
+  run a regular bowtie2 job mapping the dangler sequences (6) against
+  the reference genome
+* (8) extract PFR's 
+  based on the danglers mapping to the 
+
+
+
+
