@@ -24,27 +24,31 @@ analysis steps & data sets are:
   and output a properly renamed fastq file containing the
   "danglers". A "dangler" is a read that does not map to the element
   database (3), but it's paired end mate does!
-
-                             ____
-                            /    \
-                       =====      =====   <- dangler
-        +==================+      
-        | ELEMENT DATABASE |
-        +==================+
-  
-  
-
+                                ____
+                               /    \
+                          =====      =====   <- dangler
+      +========================+        
+      | A sequence from the    |   
+      | element database (3/5) |
+      +========================+
+   
   Check how to run the script using the `-h` parameter. This script
   takes as input the element bowtie2 database (5) and the input fastq
   (1).
 
-
-
 * (7) map the danglers to the reference genome
   run a regular bowtie2 job mapping the dangler sequences (6) against
-  the reference genome
-* (8) extract PFR's 
-  based on the danglers mapping to the 
+  the reference genome (2/4)
+* (8) extract PFR's from the BAM alignment from (7)
+  using the script lf_regionify. This script needs to be executed for
+  each genome/sample separately. The output is a GFF file identifygin
+  each PFR separately. The script splits PFR's based on family and
+  orientation and tries to unmerge peaks that are close together. A
+  score is assigned to each PFR.
+* (9) compare PFR's between genomes
+  This script (lf_findiff) is still very experimental. It takes a
+  number of input GFF PFR files and determines which one overlap,
+  followed by absence presence information.
 
 
 
