@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import string
 import argparse
 import collections
