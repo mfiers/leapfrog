@@ -19,7 +19,14 @@ def identify_danglers(arguments):
     i = 0
     j = 1
     with open(arguments.output, 'w') as F:
-        for forward, reverse in itertools.izip(run_bowtie2(arguments.bowtie2_database, arguments.forward_reads, arguments.bowtie_preset, arguments.threads), run_bowtie2(arguments.bowtie2_database, arguments.reverse_reads, arguments.bowtie_preset, arguments.threads)):
+        for forward, reverse in itertools.izip(run_bowtie2(arguments.bowtie2_database,
+                                                           arguments.forward_reads,
+                                                           arguments.bowtie_preset,
+                                                           arguments.threads),
+                                               run_bowtie2(arguments.bowtie2_database,
+                                                           arguments.reverse_reads,
+                                                           arguments.bowtie_preset,
+                                                           arguments.threads)):
             i += 1
             fflag = int(forward[1])
             rflag = int(reverse[1])
