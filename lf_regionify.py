@@ -60,6 +60,8 @@ bump_stop = -1
 bump_reads = []
 
 FC = 0
+
+
 def famdump(chrom, family, reads):
     global FC
     FC += 1
@@ -80,7 +82,7 @@ def famdump(chrom, family, reads):
         if SDF >= args.min_diff:
             no_unique_hits += 1
 
-    start = min([r.pos  for r in reads])
+    start = min([r.pos for r in reads])
     stop = max([r.pos + r.qlen for r in reads])
 
     # generate a regional coverage plot
@@ -133,8 +135,10 @@ def famdump(chrom, family, reads):
             peakreads = []
             for r in reads:
                 # print r.pos, r.pos + r.qlen, start + peakstart, stop + peakstop
-                if r.pos > start + peakstop: continue
-                if r.pos + r.qlen < start + peakstart: continue
+                if r.pos > start + peakstop:
+                    continue
+                if r.pos + r.qlen < start + peakstart:
+                    continue
                 peakreads.append(r)
             # print 'peak %d to %d with %d reads out of %d ' % (
             # peakstart, peakstop, len(peakreads), len(reads))
@@ -163,16 +167,18 @@ def famdump(chrom, family, reads):
 
         return gapsplit_rv
 
-
-    names = [r.qname.split('__')[0].rsplit('/',1)[0] for r in reads]
+    names = [r.qname.split('__')[0].rsplit('/', 1)[0] for r in reads]
     namecount = reversed(sorted([(float(names.count(e)) / len(names), e) for e in set(names)]))
     namecount = [x for x in namecount if x[0] > 0.1]
     names = ",".join([n[1] for n in namecount])
 
     fracreverse = float(len([1 for r in reads if r.is_reverse])) / len(reads)
-    if fracreverse < 0.1: strand = '+'
-    elif fracreverse < 0.9: strand = '.'
-    else: strand = '-'
+    if fracreverse < 0.1:
+        strand = '+'
+    elif fracreverse < 0.9:
+        strand = '.'
+    else:
+        strand = '-'
     visstrand = ''.join(sorted([{True:'-', False:'+'}[r.is_reverse] for r in reads]))
 
     if no_unique_hits >= args.min_diff:
@@ -189,8 +195,11 @@ def famdump(chrom, family, reads):
 
     return 1
 
+
 def clean_family_name(f):
     return f.replace('(', '').replace(')', '').replace('#', '')
+
+
 def bumpdump(chrom, reads):
 
     fams = collections.defaultdict(list)
@@ -198,7 +207,7 @@ def bumpdump(chrom, reads):
     # first subdivide into families
     for read in reads:
         try:
-            family = read.qname.split('__')[0].rsplit('/',1)[1]
+            family = read.qname.split('__')[0].rsplit('/', 1)[1]
         except IndexError:
             family = read.qname.split('__')[0]
 
@@ -222,7 +231,7 @@ for i, read in enumerate(sam.fetch()):
         if bump_reads:
             bump_count += bumpdump(bump_chrom, bump_reads)
         bump_chrom = chrom
-        bump_start =  start
+        bump_start = start
         bump_stop = stop
         bump_reads = [read]
 
@@ -232,4 +241,3 @@ for i, read in enumerate(sam.fetch()):
 
         bump_stop = max(stop, bump_stop)
         bump_reads.append(read)
-
