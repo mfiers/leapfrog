@@ -76,22 +76,22 @@ def famdump(chrom, family, reads):
                 XS = t[1]
 
         SDF = AS - XS
-        #lg.critical("%s %s %s" % ( AS, XS, SDF))
+        # lg.critical("%s %s %s" % ( AS, XS, SDF))
         if SDF >= args.min_diff:
-            no_unique_hits += 1        
+            no_unique_hits += 1
 
     start = min([r.pos  for r in reads])
     stop = max([r.pos + r.qlen for r in reads])
 
-    #generate a regional coverage plot
+    # generate a regional coverage plot
     covarr = np.zeros((stop-start))
     for r in reads:
         covarr[(r.pos - start):(r.pos + r.qlen - start)] += 1
 
-    #max coverage    
+    # max coverage
     maxcov = max(covarr)
 
-    #set anything below args.trim_cov to 0
+    # set anything below args.trim_cov to 0
     trim_cutoff = args.trim_cov
     if trim_cutoff < 1:
         trim_cutoff *= maxcov
@@ -99,64 +99,64 @@ def famdump(chrom, family, reads):
 
     covarr[covarr < trim_cutoff] = 0
 
-    #trim the peak - start
+    # trim the peak - start
     while len(covarr) > 0 and covarr[0] == 0:
         start += 1
         covarr = covarr[1:]
-    #trim the peak -end
+    # trim the peak -end
     while len(covarr) > 0 and covarr[-1] == 0:
         stop -= 1
         covarr = covarr[:-1]
 
     if len(covarr) == 0:
-        return 0 
+        return 0
 
     avg_coverage = sum([r.qlen for r in reads]) / float(stop - start)
-    if maxcov < args.min_coverage: 
+    if maxcov < args.min_coverage:
         return 0
 
     if 0 in covarr:
-        #go into gapsplitting mode
+        # go into gapsplitting mode
         gapsplit_rv = 0
 
-        #print "SPLIT"
-        #print 'start, stop, maxcov', start, stop, maxcov
-        #print covarr
+        # print "SPLIT"
+        # print 'start, stop, maxcov', start, stop, maxcov
+        # print covarr
         # after trimming start & stop we should always start inside a
         # peak
         def _process_peak(peakstart, peakstop):
             """
             process a peak - (iteratively send it of for processing
-            
+
             """
-            #identify reads that overlap with this peak
+            # identify reads that overlap with this peak
             peakreads = []
             for r in reads:
-                #print r.pos, r.pos + r.qlen, start + peakstart, stop + peakstop
+                # print r.pos, r.pos + r.qlen, start + peakstart, stop + peakstop
                 if r.pos > start + peakstop: continue
                 if r.pos + r.qlen < start + peakstart: continue
                 peakreads.append(r)
-            #print 'peak %d to %d with %d reads out of %d ' % (
-            #    peakstart, peakstop, len(peakreads), len(reads))
+            # print 'peak %d to %d with %d reads out of %d ' % (
+            # peakstart, peakstop, len(peakreads), len(reads))
             return famdump(chrom, family, peakreads)
-        
+
         inpeak, peakstart, peakstop = True, 0, 0
         for i, ingap in enumerate(covarr == 0):
             if not ingap:
-                #we're not in a gap (yet)
+                # we're not in a gap (yet)
                 peakstop = i
                 if not inpeak:
-                    #and we'er just coming into a peak
+                    # and we'er just coming into a peak
                     inpeak = True
                     peakstart = i
             else:
-                #we are in a gap - 
+                # we are in a gap -
                 if inpeak:
-                    #we just left a peak
+                    # we just left a peak
                     gapsplit_rv += _process_peak(peakstart, peakstop)
                     covarr[peakstart:peakstop+1] = 99
                 inpeak = False
-        #we're leaving a peak for sure now
+        # we're leaving a peak for sure now
         if inpeak:
             gapsplit_rv += _process_peak(peakstart, peakstop)
             covarr[peakstart:peakstop+1] = 99
@@ -195,7 +195,7 @@ def bumpdump(chrom, reads):
 
     fams = collections.defaultdict(list)
 
-    #first subdivide into families
+    # first subdivide into families
     for read in reads:
         try:
             family = read.qname.split('__')[0].rsplit('/',1)[1]
@@ -203,7 +203,7 @@ def bumpdump(chrom, reads):
             family = read.qname.split('__')[0]
 
         fams[family].append(read)
-        
+
     rv = 0
     for f in fams:
         rv += famdump(chrom, f, fams[f])
@@ -211,13 +211,13 @@ def bumpdump(chrom, reads):
 
 bump_count = 0
 for i, read in enumerate(sam.fetch()):
-    
+
     chrom = sam.getrname(read.tid)
     start = read.pos
     stop = read.pos + read.qlen
 
     if bump_chrom != chrom or start > bump_stop:
-        #new bump - process old bump
+        # new bump - process old bump
 
         if bump_reads:
             bump_count += bumpdump(bump_chrom, bump_reads)
@@ -225,11 +225,11 @@ for i, read in enumerate(sam.fetch()):
         bump_start =  start
         bump_stop = stop
         bump_reads = [read]
-        
+
     else:
-        #still in bump
-        #we demand that the reads are sorted - so only need to check the
-        
+        # still in bump
+        # we demand that the reads are sorted - so only need to check the
+
         bump_stop = max(stop, bump_stop)
         bump_reads.append(read)
 
