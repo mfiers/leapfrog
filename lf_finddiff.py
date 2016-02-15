@@ -5,6 +5,7 @@ import string
 import argparse
 import collections
 
+
 class Peekorator(object):
 
     def __init__(self, generator):
@@ -34,6 +35,7 @@ class Peekorator(object):
             self.empty = True
         return to_return
 
+
 class GFFRecord:
     def __init__(self, line, tag):
         ls = line.split()
@@ -48,17 +50,18 @@ class GFFRecord:
         self.phase = ls[7]
         attrs = ls[8].split(';')
         for a in attrs:
-            k,v = map(string.strip, a.split('=',1))
+            k, v = map(string.strip, a.split('=', 1))
             self.__dict__[k] = v
 
     def __str__(self):
         return self.ID
 
+
 class GFFReader(object):
     def __init__(self, filename, only_unique):
         self.filename = filename
         self.F = open(self.filename)
-        self.tag = filename.rsplit('/',1)[-1].replace('.gff', '')
+        self.tag = filename.rsplit('/', 1)[-1].replace('.gff', '')
         self.only_unique = only_unique
 
     def __iter__(self):
@@ -67,9 +70,12 @@ class GFFReader(object):
     def getline(self):
         while True:
             line = self.F.readline()
-            if not line: break
-            if line[0] != '#': break
-        if not line: raise StopIteration()
+            if not line:
+                break
+            if line[0] != '#':
+                break
+        if not line:
+            raise StopIteration()
         return line
 
     def next(self):
@@ -96,8 +102,8 @@ nicenames = [os.path.basename(x).replace('.gff', '') for x in inputfiles]
 # outgff = ['%s.%s.gff' % (base, x) for x in nicenames]
 parsers = [Peekorator(GFFReader(x, args.only_unique)) for x in inputfiles]
 
-FOUT1 = open(base +'.regions', 'w')
-FOUT2 = open(base +'.table', 'w')
+FOUT1 = open(base + '.regions', 'w')
+FOUT2 = open(base + '.table', 'w')
 
 COREGFF = open(base + '.gff', 'w')
 # GFFOUT = [open(x, 'w') for x in outgff]
@@ -130,7 +136,8 @@ while True:
     reference_peek = None
     for i, parser in enumerate(parsers):
         bmp = parser.peek
-        if not bmp: continue
+        if not bmp:
+            continue
         if bmp.seqid != this_chromosome:
             # not on this chromosome - we'll pick this one up later
             continue
@@ -163,7 +170,8 @@ while True:
         for i, parser in enumerate(parsers):
             check_bmp = parser.peek
 
-            if not check_bmp: continue
+            if not check_bmp:
+                continue
 
             check_type = gff_type_to_fam(check_bmp.type)
 
@@ -181,9 +189,10 @@ while True:
             bump_group.append(new_bump)
             bump_end = max(bump_end, new_bump.end)
             found_overlap = True
-        if not found_overlap: break
+        if not found_overlap:
+            break
 
-    if not bump_group :
+    if not bump_group:
         # assume end of file
         break
 
@@ -195,12 +204,13 @@ while True:
     # print tags
     # print scores
 
-    ld = [{True:'1', False:'0'}[nn in tags] for nn in nicenames]
+    ld = [{True: '1', False: '0'}[nn in tags] for nn in nicenames]
     ls = [str(scores[nn]) for nn in nicenames]
 
     # print ld # print ls
     if args.only_differential:
-        if len(set(ld)) < 2: continue
+        if len(set(ld)) < 2:
+            continue
 
     group_count += 1
     FOUT1.write("\t".join(map(str, [bump_seqid, bump_start, bump_end, bump_type, str(len(tags))] + tags)))
