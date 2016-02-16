@@ -40,10 +40,8 @@ parser.add_argument('-C', '--min_trim_cov', type=int, default=3,
                           "value sets a lower limit - anything "
                           "below this value will be trimmed "
                           "for sure. (default 3)"))
-parser.add_argument('-q',
-                    '--output_nonunique',
-                    action='store_true',
-                    default=False,
+parser.add_argument('-q', '--output_nonunique',
+                    action='store_true', default=False,
                     help=("also output peaks which are no likely "
                           "to be uniquely mapped"))
 args = parser.parse_args()
