@@ -9,54 +9,11 @@ import collections
 logging.basicConfig()
 lg = logging.getLogger(__name__)
 
-parser = argparse.ArgumentParser('Identify transposon flanking regions')
-parser.add_argument('input_bam')
-parser.add_argument('-a', '--min_coverage', type=int, default=4,
-                    help=("Minimal coverage for a family to be "
-                          "exported as a peak - the number "
-                          "checked is the maximal coverage for "
-                          "that set of mapping reads. (default 4)"))
-parser.add_argument('-m', '--min_diff', type=int, default=5,
-                    help=("Stringency to determine if a hit maps "
-                          "uniquely. This score is the "
-                          "minimal allowed difference between the "
-                          "scores of the first and second "
-                          "hit before a read is assumed to be "
-                          "mapped to it's correct, unique, "
-                          "location. (default=5)"))
-parser.add_argument('-c', '--trim_cov', type=float, default=3.,
-                    help=("Minimal coverage of a read region "
-                          "that is considered part of the "
-                          "peak. This number is used to trim "
-                          "trailing edges from a peak, or, if "
-                          "necessary to cut a peak into an "
-                          "number of smaller peaks. Note, if you "
-                          "set a value below 0, it will be "
-                          "interpreted as a fraction of the "
-                          "maximal coverage observed for that "
-                          "peak. (default: 3)"))
-parser.add_argument('-C', '--min_trim_cov', type=int, default=3,
-                    help=("When using a fraction for -c, this "
-                          "value sets a lower limit - anything "
-                          "below this value will be trimmed "
-                          "for sure. (default 3)"))
-parser.add_argument('-q', '--output_nonunique',
-                    action='store_true', default=False,
-                    help=("also output peaks which are no likely "
-                          "to be uniquely mapped"))
-args = parser.parse_args()
-
-sam = pysam.Samfile(args.input_bam, 'rb')
-
-bump_chrom = ""
-bump_start = -1
-bump_stop = -1
-bump_reads = []
 
 FC = 0
 
 
-def famdump(chrom, family, reads):
+def famdump(chrom, family, reads, args):
     global FC
     FC += 1
 
@@ -136,7 +93,7 @@ def famdump(chrom, family, reads):
                 peakreads.append(r)
             # print 'peak %d to %d with %d reads out of %d ' % (
             # peakstart, peakstop, len(peakreads), len(reads))
-            return famdump(chrom, family, peakreads)
+            return famdump(chrom, family, peakreads, args)
 
         inpeak, peakstart, peakstop = True, 0, 0
         for i, ingap in enumerate(covarr == 0):
@@ -194,7 +151,7 @@ def clean_family_name(f):
     return f.replace('(', '').replace(')', '').replace('#', '')
 
 
-def bumpdump(chrom, reads):
+def bumpdump(chrom, reads, args):
 
     fams = collections.defaultdict(list)
 
@@ -209,29 +166,70 @@ def bumpdump(chrom, reads):
 
     rv = 0
     for f in fams:
-        rv += famdump(chrom, f, fams[f])
+        rv += famdump(chrom, f, fams[f], args)
     return rv
 
-bump_count = 0
-for i, read in enumerate(sam.fetch()):
 
-    chrom = sam.getrname(read.tid)
-    start = read.pos
-    stop = read.pos + read.qlen
+def main():
+    parser = argparse.ArgumentParser('Identify transposon flanking regions')
+    parser.add_argument('input_bam')
+    parser.add_argument('-a', '--min_coverage', type=int, default=4,
+                        help=("Minimal coverage for a family to be "
+                              "exported as a peak - the number "
+                              "checked is the maximal coverage for "
+                              "that set of mapping reads. (default 4)"))
+    parser.add_argument('-m', '--min_diff', type=int, default=5,
+                        help=("Stringency to determine if a hit maps "
+                              "uniquely. This score is the "
+                              "minimal allowed difference between the "
+                              "scores of the first and second "
+                              "hit before a read is assumed to be "
+                              "mapped to it's correct, unique, "
+                              "location. (default=5)"))
+    parser.add_argument('-c', '--trim_cov', type=float, default=3.,
+                        help=("Minimal coverage of a read region "
+                              "that is considered part of the "
+                              "peak. This number is used to trim "
+                              "trailing edges from a peak, or, if "
+                              "necessary to cut a peak into an "
+                              "number of smaller peaks. Note, if you "
+                              "set a value below 0, it will be "
+                              "interpreted as a fraction of the "
+                              "maximal coverage observed for that "
+                              "peak. (default: 3)"))
+    parser.add_argument('-C', '--min_trim_cov', type=int, default=3,
+                        help=("When using a fraction for -c, this "
+                              "value sets a lower limit - anything "
+                              "below this value will be trimmed "
+                              "for sure. (default 3)"))
+    parser.add_argument('-q', '--output_nonunique',
+                        action='store_true', default=False,
+                        help=("also output peaks which are no likely "
+                              "to be uniquely mapped"))
+    args = parser.parse_args()
+    sam = pysam.Samfile(args.input_bam, 'rb')
+    bump_chrom = ""
+    bump_start = -1
+    bump_stop = -1
+    bump_reads = []
+    bump_count = 0
+    for i, read in enumerate(sam.fetch()):
+        chrom = sam.getrname(read.tid)
+        start = read.pos
+        stop = read.pos + read.qlen
+        if bump_chrom != chrom or start > bump_stop:
+            # new bump - process old bump
+            if bump_reads:
+                bump_count += bumpdump(bump_chrom, bump_reads, args)
+            bump_chrom = chrom
+            bump_start = start
+            bump_stop = stop
+            bump_reads = [read]
+        else:
+            # still in bump
+            # we demand that the reads are sorted - so only need to check the
+            bump_stop = max(stop, bump_stop)
+            bump_reads.append(read)
 
-    if bump_chrom != chrom or start > bump_stop:
-        # new bump - process old bump
-
-        if bump_reads:
-            bump_count += bumpdump(bump_chrom, bump_reads)
-        bump_chrom = chrom
-        bump_start = start
-        bump_stop = stop
-        bump_reads = [read]
-
-    else:
-        # still in bump
-        # we demand that the reads are sorted - so only need to check the
-
-        bump_stop = max(stop, bump_stop)
-        bump_reads.append(read)
+if __name__ == '__main__':
+    main()
