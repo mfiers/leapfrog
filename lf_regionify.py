@@ -37,17 +37,36 @@ below this value will be trimmed for sure. (default 3)
 """).split()
 
 parser = argparse.ArgumentParser('Identify transposon flanking regions')
+
 parser.add_argument('input_bam')
-parser.add_argument('-a', '--min_coverage', type=int, default=4,
+
+parser.add_argument('-a',
+                    '--min_coverage',
+                    type=int, default=4,
                     help=mincov_help)
-parser.add_argument('-m', '--min_diff', type=int, default=5,
+
+parser.add_argument('-m',
+                    '--min_diff',
+                    type=int,
+                    default=5,
                     help=md_help)
-parser.add_argument('-c', '--trim_cov', type=float, default=3.,
+
+parser.add_argument('-c',
+                    '--trim_cov',
+                    type=float,
+                    default=3.,
                     help=peakfilter_help)
-parser.add_argument('-C', '--min_trim_cov', type=int, default=3,
+
+parser.add_argument('-C',
+                    '--min_trim_cov',
+                    type=int,
+                    default=3,
                     help=mintrimcov_help)
 
-parser.add_argument('-q', '--output_nonunique', action='store_true', default=False,
+parser.add_argument('-q',
+                    '--output_nonunique',
+                    action='store_true',
+                    default=False,
                     help='also output peaks which are no likely to be uniquely mapped')
 
 args = parser.parse_args()
