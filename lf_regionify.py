@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import numpy as np
 import pysam
 import logging
@@ -170,7 +171,7 @@ def bumpdump(chrom, reads, args):
     return rv
 
 
-def main():
+def parse_args(args):
     parser = argparse.ArgumentParser('Identify transposon flanking regions')
     parser.add_argument('input_bam')
     parser.add_argument('-a', '--min_coverage', type=int, default=4,
@@ -206,7 +207,11 @@ def main():
                         action='store_true', default=False,
                         help=("also output peaks which are no likely "
                               "to be uniquely mapped"))
-    args = parser.parse_args()
+    return(parser.parse_args())
+
+
+def main():
+    args = parse_args(sys.argv[1:])
     sam = pysam.Samfile(args.input_bam, 'rb')
     bump_chrom = ""
     bump_start = -1
