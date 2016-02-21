@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import itertools
 import subprocess as sp
 import argparse
@@ -48,7 +49,7 @@ def identify_danglers(arguments):
                 F.write('%s\n+\n%s\n' % (reverse[9], reverse[10]))
 
 
-def main():
+def parse_args(arguments):
     parser = argparse.ArgumentParser(description='find danglers')
     parser.add_argument('-t', '--threads', default=10, type=int)
     parser.add_argument('bowtie2_database')
@@ -56,7 +57,10 @@ def main():
     parser.add_argument('reverse_reads')
     parser.add_argument('output')
     parser.add_argument('-p', '--bowtie_preset', default='fast')
-    arguments = parser.parse_args()
+    return(parser.parse_args())
+
+def main():
+    arguments = parse_args(sys.argv[1:])
     identify_danglers(arguments)
 
 
