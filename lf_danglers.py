@@ -59,6 +59,7 @@ def parse_args(arguments):
     parser.add_argument('-p', '--bowtie_preset', default='fast')
     return(parser.parse_args())
 
+
 def main():
     arguments = parse_args(sys.argv[1:])
     identify_danglers(arguments)
