@@ -141,9 +141,9 @@ def famdump(chrom, family, reads, args):
     if (not args.output_nonunique) and (state == 'NOTUNIQ'):
         return 0
 
-    print '%s\tREFS\tREFS.%s.%s\t%d\t%d\t%.2f\t%s\t.\tID=reps_%s_%s_%s;Name="%s"' % (
+    print('%s\tREFS\tREFS.%s.%s\t%d\t%d\t%.2f\t%s\t.\tID=reps_%s_%s_%s;Name="%s"' % (
         chrom, state, family, start, stop, avg_coverage, strand, chrom, start, family,
-        names)
+        names))
 
     return 1
 
