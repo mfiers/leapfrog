@@ -22,8 +22,8 @@ with open(sys.argv[1]) as F:
                 simmat[(a, b)] += 1
 
 
-print 'total', total
-print libs
+print('total', total)
+print(libs)
 libs = sorted(libs)
 base = sys.argv[2]
 
