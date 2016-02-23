@@ -57,7 +57,7 @@ def parse_args(arguments):
     parser.add_argument('reverse_reads')
     parser.add_argument('output')
     parser.add_argument('-p', '--bowtie_preset', default='fast')
-    return(parser.parse_args())
+    return parser.parse_args()
 
 
 def main():
