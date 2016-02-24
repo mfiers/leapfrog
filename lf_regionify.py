@@ -126,7 +126,7 @@ def famdump(chrom, family, reads, args):
         strand = '.'
     else:
         strand = '-'
-    visstrand = ''.join(sorted([{True:'-', False:'+'}[r.is_reverse] for r in reads]))
+    visstrand = ''.join(sorted([{True: '-', False:'+'}[r.is_reverse] for r in reads]))
 
     if no_unique_hits >= args.min_diff:
         state = 'UNIQUE'
