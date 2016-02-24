@@ -6,10 +6,10 @@ import subprocess as sp
 import argparse
 
 
-def run_bowtie2(db, fq, preset, threads):
-    cl = "bowtie2 --%s --reorder --no-head --quiet -p %d -x %s -U %s" % (
-        preset, threads, db, fq)
-    process = sp.Popen(cl, shell=True, stdout=sp.PIPE)
+def run_bowtie2(database, fastq, preset, threads):
+    command = "bowtie2 --%s --reorder --no-head --quiet -p %d -x %s -U %s" % (
+        preset, threads, database, fastq)
+    process = sp.Popen(command, shell=True, stdout=sp.PIPE)
     for line in process.stdout:
         if line[0] == '@':
             continue
