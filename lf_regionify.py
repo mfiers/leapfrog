@@ -198,7 +198,7 @@ def parse_args(args):
                         action='store_true', default=False,
                         help=("also output peaks which are no likely "
                               "to be uniquely mapped"))
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def main():
