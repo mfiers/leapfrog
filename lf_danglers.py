@@ -26,22 +26,22 @@ def identify_danglers(arguments):
                                                            arguments.reverse_reads,
                                                            arguments.bowtie_preset,
                                                            arguments.threads)):
-            fflag = int(forward[1])
-            rflag = int(reverse[1])
-            if fflag & 0x4 == rflag & 0x4:
+            forward_flag = int(forward[1])
+            reverse_flag = int(reverse[1])
+            if forward_flag & 0x4 == reverse_flag & 0x4:
                 # either both map, or both do not map
                 # not dangling
                 continue
 
-            if fflag & 0x4:
+            if forward_flag & 0x4:
                 # forward is dangling
-                tag = 'R' + {0: '+', 0x10: '-'}[rflag & 0x10]
+                tag = 'R' + {0: '+', 0x10: '-'}[reverse_flag & 0x10]
                 F.write('@%s__%s__%s\n' % (reverse[2], tag, forward[0]))
                 F.write('%s\n+\n%s\n' % (forward[9], forward[10]))
 
             else:
                 # reverse is dangling
-                tag = 'F' + {0: '+', 0x10: '-'}[fflag & 0x10]
+                tag = 'F' + {0: '+', 0x10: '-'}[forward_flag & 0x10]
                 F.write('@%s__%s__%s\n' % (forward[2], tag, reverse[0]))
                 F.write('%s\n+\n%s\n' % (reverse[9], reverse[10]))
 
