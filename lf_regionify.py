@@ -11,12 +11,7 @@ logging.basicConfig()
 lg = logging.getLogger(__name__)
 
 
-FC = 0
-
-
 def famdump(chrom, family, reads, args):
-    global FC
-    FC += 1
 
     no_unique_hits = 0
     for r in reads:
