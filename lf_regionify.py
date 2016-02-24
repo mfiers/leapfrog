@@ -143,10 +143,6 @@ def famdump(chrom, family, reads, args):
     return 1
 
 
-def clean_family_name(f):
-    return f.replace('(', '').replace(')', '').replace('#', '')
-
-
 def bumpdump(chrom, reads, args):
 
     fams = collections.defaultdict(list)
