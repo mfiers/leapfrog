@@ -17,7 +17,7 @@ def run_bowtie2(database, fastq, preset, threads):
 
 
 def identify_danglers(arguments):
-    with open(arguments.output, 'w') as F:
+    with open(arguments.output, 'w') as output_file:
         for forward, reverse in itertools.izip(run_bowtie2(arguments.bowtie2_database,
                                                            arguments.forward_reads,
                                                            arguments.bowtie_preset,
@@ -36,14 +36,14 @@ def identify_danglers(arguments):
             if forward_flag & 0x4:
                 # forward is dangling
                 tag = 'R' + {0: '+', 0x10: '-'}[reverse_flag & 0x10]
-                F.write('@%s__%s__%s\n' % (reverse[2], tag, forward[0]))
-                F.write('%s\n+\n%s\n' % (forward[9], forward[10]))
+                output_file.write('@%s__%s__%s\n' % (reverse[2], tag, forward[0]))
+                output_file.write('%s\n+\n%s\n' % (forward[9], forward[10]))
 
             else:
                 # reverse is dangling
                 tag = 'F' + {0: '+', 0x10: '-'}[forward_flag & 0x10]
-                F.write('@%s__%s__%s\n' % (forward[2], tag, reverse[0]))
-                F.write('%s\n+\n%s\n' % (reverse[9], reverse[10]))
+                output_file.write('@%s__%s__%s\n' % (forward[2], tag, reverse[0]))
+                output_file.write('%s\n+\n%s\n' % (reverse[9], reverse[10]))
 
 
 def parse_args(arguments):
