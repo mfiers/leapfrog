@@ -27,7 +27,7 @@ def align_paired_reads(arguments):
                            arguments.threads))
 
 
-def identify_danglers(aligned_pairs, arguments):
+def identify_danglers(aligned_pairs):
     for forward, reverse in aligned_pairs:
         forward_flag = int(forward[1])
         reverse_flag = int(reverse[1])
@@ -73,7 +73,7 @@ def parse_args(arguments):
 def main():
     arguments = parse_args(sys.argv[1:])
     aligned_pairs = align_paired_reads(arguments)
-    danglers = identify_danglers(aligned_pairs, arguments)
+    danglers = identify_danglers(aligned_pairs)
     write_danglers(danglers, arguments)
 
 
