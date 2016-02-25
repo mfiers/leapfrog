@@ -17,33 +17,42 @@ def run_bowtie2(database, fastq, preset, threads):
 
 
 def identify_danglers(arguments):
+    for forward, reverse in itertools.izip(run_bowtie2(arguments.bowtie2_database,
+                                                       arguments.forward_reads,
+                                                       arguments.bowtie_preset,
+                                                       arguments.threads),
+                                           run_bowtie2(arguments.bowtie2_database,
+                                                       arguments.reverse_reads,
+                                                       arguments.bowtie_preset,
+                                                       arguments.threads)):
+        forward_flag = int(forward[1])
+        reverse_flag = int(reverse[1])
+        if forward_flag & 0x4 == reverse_flag & 0x4:
+            # either both map, or both do not map
+            # not dangling
+            continue
+
+        if forward_flag & 0x4:
+            # forward is dangling
+            tag = 'R' + {0: '+', 0x10: '-'}[reverse_flag & 0x10]
+            header = ('@%s__%s__%s\n' % (reverse[2], tag, forward[0]))
+            sequence = ('%s\n+\n%s\n' % (forward[9], forward[10]))
+            dangler = ('%s\n%s' % (header, sequence))
+            yield dangler
+
+        else:
+            # reverse is dangling
+            tag = 'F' + {0: '+', 0x10: '-'}[forward_flag & 0x10]
+            header = ('@%s__%s__%s\n' % (forward[2], tag, reverse[0]))
+            sequence = ('%s\n+\n%s\n' % (reverse[9], reverse[10]))
+            dangler = ('%s\n%s' % (header, sequence))
+            yield dangler
+
+
+def write_danglers(danglers, arguments):
     with open(arguments.output, 'w') as output_file:
-        for forward, reverse in itertools.izip(run_bowtie2(arguments.bowtie2_database,
-                                                           arguments.forward_reads,
-                                                           arguments.bowtie_preset,
-                                                           arguments.threads),
-                                               run_bowtie2(arguments.bowtie2_database,
-                                                           arguments.reverse_reads,
-                                                           arguments.bowtie_preset,
-                                                           arguments.threads)):
-            forward_flag = int(forward[1])
-            reverse_flag = int(reverse[1])
-            if forward_flag & 0x4 == reverse_flag & 0x4:
-                # either both map, or both do not map
-                # not dangling
-                continue
-
-            if forward_flag & 0x4:
-                # forward is dangling
-                tag = 'R' + {0: '+', 0x10: '-'}[reverse_flag & 0x10]
-                output_file.write('@%s__%s__%s\n' % (reverse[2], tag, forward[0]))
-                output_file.write('%s\n+\n%s\n' % (forward[9], forward[10]))
-
-            else:
-                # reverse is dangling
-                tag = 'F' + {0: '+', 0x10: '-'}[forward_flag & 0x10]
-                output_file.write('@%s__%s__%s\n' % (forward[2], tag, reverse[0]))
-                output_file.write('%s\n+\n%s\n' % (reverse[9], reverse[10]))
+        output_file.writelines(danglers)
+        output_file.close()
 
 
 def parse_args(arguments):
@@ -59,7 +68,8 @@ def parse_args(arguments):
 
 def main():
     arguments = parse_args(sys.argv[1:])
-    identify_danglers(arguments)
+    danglers = identify_danglers(arguments)
+    write_danglers(danglers, arguments)
 
 
 if __name__ == '__main__':
