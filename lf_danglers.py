@@ -16,15 +16,19 @@ def run_bowtie2(database, fastq, preset, threads):
         yield line.split()
 
 
-def identify_danglers(arguments):
-    for forward, reverse in itertools.izip(run_bowtie2(arguments.bowtie2_database,
-                                                       arguments.forward_reads,
-                                                       arguments.bowtie_preset,
-                                                       arguments.threads),
-                                           run_bowtie2(arguments.bowtie2_database,
-                                                       arguments.reverse_reads,
-                                                       arguments.bowtie_preset,
-                                                       arguments.threads)):
+def align_paired_reads(arguments):
+    return itertools.izip(run_bowtie2(arguments.bowtie2_database,
+                                      arguments.forward_reads,
+                                      arguments.bowtie_preset,
+                                      arguments.threads),
+                          run_bowtie2(arguments.bowtie2_database,
+                                      arguments.reverse_reads,
+                                      arguments.bowtie_preset,
+                                      arguments.threads))
+
+
+def identify_danglers(aligned_pairs, arguments):
+    for forward, reverse in aligned_pairs:
         forward_flag = int(forward[1])
         reverse_flag = int(reverse[1])
         if forward_flag & 0x4 == reverse_flag & 0x4:
@@ -37,7 +41,7 @@ def identify_danglers(arguments):
             tag = 'R' + {0: '+', 0x10: '-'}[reverse_flag & 0x10]
             header = ('@%s__%s__%s\n' % (reverse[2], tag, forward[0]))
             sequence = ('%s\n+\n%s\n' % (forward[9], forward[10]))
-            dangler = ('%s\n%s' % (header, sequence))
+            dangler = header + sequence
             yield dangler
 
         else:
@@ -45,7 +49,7 @@ def identify_danglers(arguments):
             tag = 'F' + {0: '+', 0x10: '-'}[forward_flag & 0x10]
             header = ('@%s__%s__%s\n' % (forward[2], tag, reverse[0]))
             sequence = ('%s\n+\n%s\n' % (reverse[9], reverse[10]))
-            dangler = ('%s\n%s' % (header, sequence))
+            dangler = header + sequence
             yield dangler
 
 
@@ -68,7 +72,8 @@ def parse_args(arguments):
 
 def main():
     arguments = parse_args(sys.argv[1:])
-    danglers = identify_danglers(arguments)
+    aligned_pairs = align_paired_reads(arguments)
+    danglers = identify_danglers(aligned_pairs, arguments)
     write_danglers(danglers, arguments)
 
 
