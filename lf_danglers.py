@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import sys
-import itertools
 import subprocess as sp
 import argparse
+from builtins import zip
 
 
 def run_bowtie2(database, fastq, preset, threads):
@@ -17,14 +17,14 @@ def run_bowtie2(database, fastq, preset, threads):
 
 
 def align_paired_reads(arguments):
-    return itertools.izip(run_bowtie2(arguments.bowtie2_database,
-                                      arguments.forward_reads,
-                                      arguments.bowtie_preset,
-                                      arguments.threads),
-                          run_bowtie2(arguments.bowtie2_database,
-                                      arguments.reverse_reads,
-                                      arguments.bowtie_preset,
-                                      arguments.threads))
+    return zip(run_bowtie2(arguments.bowtie2_database,
+                           arguments.forward_reads,
+                           arguments.bowtie_preset,
+                           arguments.threads),
+               run_bowtie2(arguments.bowtie2_database,
+                           arguments.reverse_reads,
+                           arguments.bowtie_preset,
+                           arguments.threads))
 
 
 def identify_danglers(aligned_pairs, arguments):
