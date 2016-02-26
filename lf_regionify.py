@@ -201,9 +201,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def main():
-    args = parse_args(sys.argv[1:])
-    sam = pysam.Samfile(args.input_bam, 'rb')
+def regionify(sam, args):
     bump_chrom = ""
     bump_start = -1
     bump_stop = -1
@@ -226,6 +224,13 @@ def main():
             # we demand that the reads are sorted - so only need to check the
             bump_stop = max(stop, bump_stop)
             bump_reads.append(read)
+
+
+def main():
+    args = parse_args(sys.argv[1:])
+    sam = pysam.Samfile(args.input_bam, 'rb')
+    regionify(sam, args)
+
 
 if __name__ == '__main__':
     main()
