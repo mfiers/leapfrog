@@ -3,12 +3,8 @@
 import sys
 import numpy as np
 import pysam
-import logging
 import argparse
 import collections
-
-logging.basicConfig()
-lg = logging.getLogger(__name__)
 
 
 def famdump(chrom, family, reads, args):
