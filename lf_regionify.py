@@ -26,46 +26,48 @@ def count_unique_reads(reads, args):
     return unique_reads
 
 
-def famdump(chrom, family, reads, args):
+def famdump(chromosome, family, reads, args):
 
     unique_reads = count_unique_reads(reads, args)
 
-    start = min([r.pos for r in reads])
-    stop = max([r.pos + r.qlen for r in reads])
+    # calculate the bounds of the clustered reads
+    cluster_start = min([r.pos for r in reads])
+    cluster_stop = max([r.pos + r.qlen for r in reads])
 
-    # generate a regional coverage plot
-    covarr = np.zeros((stop-start))
+    # generate a depth map of the clustered reads
+    cluster_map = np.zeros((cluster_stop - cluster_start))
     for r in reads:
-        covarr[(r.pos - start):(r.pos + r.qlen - start)] += 1
+        cluster_map[(r.pos - cluster_start):(r.pos + r.qlen - cluster_start)] += 1
 
-    # max coverage
-    maxcov = max(covarr)
+    # max depth of clustered reads
+    cluster_depth = max(cluster_map)
 
-    # set anything below args.trim_cov to 0
-    trim_cutoff = args.trim_cov
-    if trim_cutoff < 1:
-        trim_cutoff *= maxcov
-        trim_cutoff = max(args.min_trim_cov, trim_cutoff)
+    # set any read depths less than args.trim_cov to 0
+    # thresholds less than 1 are treated as a proportion
+    threshold_depth = args.trim_cov
+    if threshold_depth < 1:
+        threshold_depth *= cluster_depth
+        threshold_depth = max(args.min_trim_cov, threshold_depth)
 
-    covarr[covarr < trim_cutoff] = 0
+    cluster_map[cluster_map < threshold_depth] = 0
 
-    # trim the peak - start
-    while len(covarr) > 0 and covarr[0] == 0:
-        start += 1
-        covarr = covarr[1:]
-    # trim the peak -end
-    while len(covarr) > 0 and covarr[-1] == 0:
-        stop -= 1
-        covarr = covarr[:-1]
+    # trim read depths of 0 (less than the threshold) from the ends of the cluster map
+    # depths of 0 between taller peaks must be kept
+    while len(cluster_map) > 0 and cluster_map[0] == 0:
+        cluster_start += 1
+        cluster_map = cluster_map[1:]
+    while len(cluster_map) > 0 and cluster_map[-1] == 0:
+        cluster_stop -= 1
+        cluster_map = cluster_map[:-1]
 
-    if len(covarr) == 0:
+    if len(cluster_map) == 0:
         return 0
 
-    avg_coverage = sum([r.qlen for r in reads]) / float(stop - start)
-    if maxcov < args.min_coverage:
+    avg_coverage = sum([r.qlen for r in reads]) / float(cluster_stop - cluster_start)
+    if cluster_depth < args.min_coverage:
         return 0
 
-    if 0 in covarr:
+    if 0 in cluster_map:
         # go into gapsplitting mode
         gapsplit_rv = 0
 
@@ -83,17 +85,17 @@ def famdump(chrom, family, reads, args):
             peakreads = []
             for r in reads:
                 # print r.pos, r.pos + r.qlen, start + peakstart, stop + peakstop
-                if r.pos > start + peakstop:
+                if r.pos > cluster_start + peakstop:
                     continue
-                if r.pos + r.qlen < start + peakstart:
+                if r.pos + r.qlen < cluster_start + peakstart:
                     continue
                 peakreads.append(r)
             # print 'peak %d to %d with %d reads out of %d ' % (
             # peakstart, peakstop, len(peakreads), len(reads))
-            return famdump(chrom, family, peakreads, args)
+            return famdump(chromosome, family, peakreads, args)
 
         inpeak, peakstart, peakstop = True, 0, 0
-        for i, ingap in enumerate(covarr == 0):
+        for i, ingap in enumerate(cluster_map == 0):
             if not ingap:
                 # we're not in a gap (yet)
                 peakstop = i
@@ -106,12 +108,12 @@ def famdump(chrom, family, reads, args):
                 if inpeak:
                     # we just left a peak
                     gapsplit_rv += _process_peak(peakstart, peakstop)
-                    covarr[peakstart:peakstop+1] = 99
+                    cluster_map[peakstart:peakstop+1] = 99
                 inpeak = False
         # we're leaving a peak for sure now
         if inpeak:
             gapsplit_rv += _process_peak(peakstart, peakstop)
-            covarr[peakstart:peakstop+1] = 99
+            cluster_map[peakstart:peakstop+1] = 99
 
         return gapsplit_rv
 
@@ -138,7 +140,7 @@ def famdump(chrom, family, reads, args):
         return 0
 
     print('%s\tREFS\tREFS.%s.%s\t%d\t%d\t%.2f\t%s\t.\tID=reps_%s_%s_%s;Name="%s"' % (
-        chrom, state, family, start, stop, avg_coverage, strand, chrom, start, family,
+        chromosome, state, family, cluster_start, cluster_stop, avg_coverage, strand, chromosome, cluster_start, family,
         names))
 
     return 1
