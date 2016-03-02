@@ -60,12 +60,14 @@ def famdump(chromosome, family, reads, args):
         cluster_stop -= 1
         cluster_map = cluster_map[:-1]
 
+    # Do not include cluster if no points are above the minimum depth threshold
     if len(cluster_map) == 0:
         return 0
-
-    avg_coverage = sum([r.qlen for r in reads]) / float(cluster_stop - cluster_start)
     if cluster_depth < args.min_coverage:
         return 0
+
+    # sum of length of individual reads / length of cluster
+    mean_read_depth = sum([read.qlen for read in reads]) / float(cluster_stop - cluster_start)
 
     if 0 in cluster_map:
         # go into gapsplitting mode
@@ -140,7 +142,7 @@ def famdump(chromosome, family, reads, args):
         return 0
 
     print('%s\tREFS\tREFS.%s.%s\t%d\t%d\t%.2f\t%s\t.\tID=reps_%s_%s_%s;Name="%s"' % (
-        chromosome, state, family, cluster_start, cluster_stop, avg_coverage, strand, chromosome, cluster_start, family,
+        chromosome, state, family, cluster_start, cluster_stop, mean_read_depth, strand, chromosome, cluster_start, family,
         names))
 
     return 1
