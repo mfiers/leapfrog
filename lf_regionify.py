@@ -36,8 +36,8 @@ def famdump(chromosome, family, reads, args):
 
     # generate a depth map of the clustered reads
     cluster_map = np.zeros((cluster_stop - cluster_start))
-    for r in reads:
-        cluster_map[(r.pos - cluster_start):(r.pos + r.qlen - cluster_start)] += 1
+    for read in reads:
+        cluster_map[(read.pos - cluster_start):(read.pos + read.qlen - cluster_start)] += 1
 
     # max depth of clustered reads
     cluster_depth = max(cluster_map)
