@@ -7,14 +7,13 @@ import argparse
 import collections
 
 
-def famdump(chrom, family, reads, args):
-
-    no_unique_hits = 0
-    for r in reads:
+def count_unique_reads(reads, args):
+    unique_reads = 0
+    for read in reads:
         AS = -999
         XS = -999
         SDF = 0
-        for t in r.tags:
+        for t in read.tags:
             if t[0] == 'AS':
                 AS = t[1]
             if t[0] == 'XS':
@@ -23,7 +22,13 @@ def famdump(chrom, family, reads, args):
         SDF = AS - XS
         # lg.critical("%s %s %s" % ( AS, XS, SDF))
         if SDF >= args.min_diff:
-            no_unique_hits += 1
+            unique_reads += 1
+    return unique_reads
+
+
+def famdump(chrom, family, reads, args):
+
+    unique_reads = count_unique_reads(reads, args)
 
     start = min([r.pos for r in reads])
     stop = max([r.pos + r.qlen for r in reads])
@@ -124,7 +129,7 @@ def famdump(chrom, family, reads, args):
         strand = '-'
     visstrand = ''.join(sorted([{True: '-', False:'+'}[r.is_reverse] for r in reads]))
 
-    if no_unique_hits >= args.min_diff:
+    if unique_reads >= args.min_diff:
         state = 'UNIQUE'
     else:
         state = 'NOTUNIQ'
