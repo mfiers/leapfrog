@@ -229,6 +229,7 @@ def regionify(sam, args):
             # we demand that the reads are sorted - so only need to check the
             bump_stop = max(stop, bump_stop)
             bump_reads.append(read)
+    bump_count += bumpdump(bump_chrom, bump_reads, args)
 
 
 def main():
