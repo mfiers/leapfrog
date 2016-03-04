@@ -96,26 +96,26 @@ def famdump(chromosome, family, reads, args):
             # peakstart, peakstop, len(peakreads), len(reads))
             return famdump(chromosome, family, peakreads, args)
 
-        inpeak, peakstart, peakstop = True, 0, 0
-        for i, ingap in enumerate(cluster_map == 0):
-            if not ingap:
+        in_peak, peak_start, peak_stop = True, 0, 0
+        for current_position, below_threshold in enumerate(cluster_map == 0):
+            if not below_threshold:
                 # we're not in a gap (yet)
-                peakstop = i
-                if not inpeak:
-                    # and we'er just coming into a peak
-                    inpeak = True
-                    peakstart = i
+                peak_stop = current_position
+                if not in_peak:
+                    # and we're just coming into a peak
+                    in_peak = True
+                    peak_start = current_position
             else:
                 # we are in a gap -
-                if inpeak:
+                if in_peak:
                     # we just left a peak
-                    gapsplit_rv += _process_peak(peakstart, peakstop)
-                    cluster_map[peakstart:peakstop+1] = 99
-                inpeak = False
+                    gapsplit_rv += _process_peak(peak_start, peak_stop)
+                    cluster_map[peak_start:peak_stop+1] = 99
+                in_peak = False
         # we're leaving a peak for sure now
-        if inpeak:
-            gapsplit_rv += _process_peak(peakstart, peakstop)
-            cluster_map[peakstart:peakstop+1] = 99
+        if in_peak:
+            gapsplit_rv += _process_peak(peak_start, peak_stop)
+            cluster_map[peak_start:peak_stop+1] = 99
 
         return gapsplit_rv
 
