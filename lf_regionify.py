@@ -26,6 +26,56 @@ def count_unique_reads(reads, args):
     return unique_reads
 
 
+def gap_split(reads, cluster_start, cluster_map, chromosome, family, args):
+    gapsplit_rv = 0
+
+    # print "SPLIT"
+    # print 'start, stop, maxcov', start, stop, maxcov
+    # print covarr
+    # after trimming start & stop we should always start inside a
+    # peak
+    def _process_peak(peakstart, peakstop):
+        """
+        process a peak - (iteratively send it of for processing
+
+        """
+        # identify reads that overlap with this peak
+        peakreads = []
+        for r in reads:
+            # print r.pos, r.pos + r.qlen, start + peakstart, stop + peakstop
+            if r.pos > cluster_start + peakstop:
+                continue
+            if r.pos + r.qlen < cluster_start + peakstart:
+                continue
+            peakreads.append(r)
+        # print 'peak %d to %d with %d reads out of %d ' % (
+        # peakstart, peakstop, len(peakreads), len(reads))
+        return famdump(chromosome, family, peakreads, args)
+
+    in_peak, peak_start, peak_stop = True, 0, 0
+    for current_position, below_threshold in enumerate(cluster_map == 0):
+        if not below_threshold:
+            # we're not in a gap (yet)
+            peak_stop = current_position
+            if not in_peak:
+                # and we're just coming into a peak
+                in_peak = True
+                peak_start = current_position
+        else:
+            # we are in a gap -
+            if in_peak:
+                # we just left a peak
+                gapsplit_rv += _process_peak(peak_start, peak_stop)
+                cluster_map[peak_start:peak_stop+1] = 99
+            in_peak = False
+    # we're leaving a peak for sure now
+    if in_peak:
+        gapsplit_rv += _process_peak(peak_start, peak_stop)
+        cluster_map[peak_start:peak_stop+1] = 99
+
+    return gapsplit_rv
+
+
 def famdump(chromosome, family, reads, args):
 
     unique_reads = count_unique_reads(reads, args)
@@ -71,53 +121,8 @@ def famdump(chromosome, family, reads, args):
 
     if 0 in cluster_map:
         # go into gapsplitting mode
-        gapsplit_rv = 0
+        return gap_split(reads, cluster_start, cluster_map, chromosome, family, args)
 
-        # print "SPLIT"
-        # print 'start, stop, maxcov', start, stop, maxcov
-        # print covarr
-        # after trimming start & stop we should always start inside a
-        # peak
-        def _process_peak(peakstart, peakstop):
-            """
-            process a peak - (iteratively send it of for processing
-
-            """
-            # identify reads that overlap with this peak
-            peakreads = []
-            for r in reads:
-                # print r.pos, r.pos + r.qlen, start + peakstart, stop + peakstop
-                if r.pos > cluster_start + peakstop:
-                    continue
-                if r.pos + r.qlen < cluster_start + peakstart:
-                    continue
-                peakreads.append(r)
-            # print 'peak %d to %d with %d reads out of %d ' % (
-            # peakstart, peakstop, len(peakreads), len(reads))
-            return famdump(chromosome, family, peakreads, args)
-
-        in_peak, peak_start, peak_stop = True, 0, 0
-        for current_position, below_threshold in enumerate(cluster_map == 0):
-            if not below_threshold:
-                # we're not in a gap (yet)
-                peak_stop = current_position
-                if not in_peak:
-                    # and we're just coming into a peak
-                    in_peak = True
-                    peak_start = current_position
-            else:
-                # we are in a gap -
-                if in_peak:
-                    # we just left a peak
-                    gapsplit_rv += _process_peak(peak_start, peak_stop)
-                    cluster_map[peak_start:peak_stop+1] = 99
-                in_peak = False
-        # we're leaving a peak for sure now
-        if in_peak:
-            gapsplit_rv += _process_peak(peak_start, peak_stop)
-            cluster_map[peak_start:peak_stop+1] = 99
-
-        return gapsplit_rv
 
     names = [r.qname.split('__')[0].rsplit('/', 1)[0] for r in reads]
     namecount = reversed(sorted([(float(names.count(e)) / len(names), e) for e in set(names)]))
