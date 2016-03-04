@@ -123,7 +123,6 @@ def famdump(chromosome, family, reads, args):
         # go into gapsplitting mode
         return gap_split(reads, cluster_start, cluster_map, chromosome, family, args)
 
-
     names = [r.qname.split('__')[0].rsplit('/', 1)[0] for r in reads]
     namecount = reversed(sorted([(float(names.count(e)) / len(names), e) for e in set(names)]))
     namecount = [x for x in namecount if x[0] > 0.1]
