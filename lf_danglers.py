@@ -16,15 +16,15 @@ def run_bowtie2(database, fastq, preset, threads):
         yield line.split()
 
 
-def align_paired_reads(arguments):
-    return zip(run_bowtie2(arguments.bowtie2_database,
-                           arguments.forward_reads,
-                           arguments.bowtie_preset,
-                           arguments.threads),
-               run_bowtie2(arguments.bowtie2_database,
-                           arguments.reverse_reads,
-                           arguments.bowtie_preset,
-                           arguments.threads))
+def align_paired_reads(args):
+    return zip(run_bowtie2(args.bowtie2_database,
+                           args.forward_reads,
+                           args.bowtie_preset,
+                           args.threads),
+               run_bowtie2(args.bowtie2_database,
+                           args.reverse_reads,
+                           args.bowtie_preset,
+                           args.threads))
 
 
 def identify_danglers(aligned_pairs):
@@ -53,13 +53,13 @@ def identify_danglers(aligned_pairs):
             yield dangler
 
 
-def write_danglers(danglers, arguments):
-    with open(arguments.output, 'w') as output_file:
+def write_danglers(danglers, args):
+    with open(args.output, 'w') as output_file:
         output_file.writelines(danglers)
         output_file.close()
 
 
-def parse_args(arguments):
+def parse_args(args):
     parser = argparse.ArgumentParser(description='find danglers')
     parser.add_argument('-t', '--threads', default=10, type=int)
     parser.add_argument('bowtie2_database')
@@ -67,14 +67,14 @@ def parse_args(arguments):
     parser.add_argument('reverse_reads')
     parser.add_argument('output')
     parser.add_argument('-p', '--bowtie_preset', default='fast')
-    return parser.parse_args(arguments)
+    return parser.parse_args(args)
 
 
 def main():
-    arguments = parse_args(sys.argv[1:])
-    aligned_pairs = align_paired_reads(arguments)
+    args = parse_args(sys.argv[1:])
+    aligned_pairs = align_paired_reads(args)
     danglers = identify_danglers(aligned_pairs)
-    write_danglers(danglers, arguments)
+    write_danglers(danglers, args)
 
 
 if __name__ == '__main__':
