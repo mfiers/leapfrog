@@ -120,22 +120,25 @@ def famdump(chromosome, family, reads, args):
     mean_read_depth = sum([read.qlen for read in reads]) / float(cluster_stop - cluster_start)
 
     if 0 in cluster_map:
-        # go into gapsplitting mode
+        # go into gap splitting mode
         return gap_split(reads, cluster_start, cluster_map, chromosome, family, args)
 
-    names = [r.qname.split('__')[0].rsplit('/', 1)[0] for r in reads]
-    namecount = reversed(sorted([(float(names.count(e)) / len(names), e) for e in set(names)]))
-    namecount = [x for x in namecount if x[0] > 0.1]
-    names = ",".join([n[1] for n in namecount])
+    # Munging read names
+    names = [read.qname.split('__')[0].rsplit('/', 1)[0] for read in reads]
+    name_count = reversed(sorted([(float(names.count(e)) / len(names), e) for e in set(names)]))
+    name_count = [x for x in name_count if x[0] > 0.1]
+    names = ",".join([n[1] for n in name_count])
 
-    fracreverse = float(len([1 for r in reads if r.is_reverse])) / len(reads)
-    if fracreverse < 0.1:
+    # Identify direction of reads in cluster
+    proportion_reversed = float(len([1 for read in reads if read.is_reverse])) / len(reads)
+    if proportion_reversed < 0.1:
         strand = '+'
-    elif fracreverse < 0.9:
+    elif proportion_reversed < 0.9:
         strand = '.'
     else:
         strand = '-'
-    visstrand = ''.join(sorted([{True: '-', False:'+'}[r.is_reverse] for r in reads]))
+    
+    visstrand = ''.join(sorted([{True: '-', False:'+'}[read.is_reverse] for read in reads]))
 
     if unique_reads >= args.min_diff:
         state = 'UNIQUE'
