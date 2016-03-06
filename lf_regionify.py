@@ -81,8 +81,8 @@ def famdump(chromosome, family, reads, args):
     unique_reads = count_unique_reads(reads, args)
 
     # calculate the bounds of the clustered reads
-    cluster_start = min([r.pos for r in reads])
-    cluster_stop = max([r.pos + r.qlen for r in reads])
+    cluster_start = min([read.pos for read in reads])
+    cluster_stop = max([read.pos + read.qlen for read in reads])
 
     # generate a depth map of the clustered reads
     cluster_map = np.zeros((cluster_stop - cluster_start))
@@ -138,17 +138,21 @@ def famdump(chromosome, family, reads, args):
     else:
         strand = '-'
 
+    # Only output read cluster if it contains enough unique reads
     if unique_reads >= args.min_diff:
-        state = 'UNIQUE'
+        # Carry on because read cluster contains enough unique reads
+        cluster_type = 'UNIQUE'
+    elif args.output_nonunique:
+        # Carry on regardless of unique read count
+        cluster_type = 'NOTUNIQUE'
     else:
-        state = 'NOTUNIQ'
-
-    if (not args.output_nonunique) and (state == 'NOTUNIQ'):
+        # Not enough unique reads in read cluster
         return 0
 
+    # Print the valid read cluster
     print('%s\tREFS\tREFS.%s.%s\t%d\t%d\t%.2f\t%s\t.\tID=reps_%s_%s_%s;Name="%s"' % (
-        chromosome, state, family, cluster_start, cluster_stop, mean_read_depth, strand, chromosome, cluster_start, family,
-        names))
+        chromosome, cluster_type, family, cluster_start, cluster_stop, mean_read_depth,
+        strand, chromosome, cluster_start, family, names))
 
     return 1
 
