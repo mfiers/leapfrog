@@ -137,8 +137,6 @@ def famdump(chromosome, family, reads, args):
         strand = '.'
     else:
         strand = '-'
-    
-    visstrand = ''.join(sorted([{True: '-', False:'+'}[read.is_reverse] for read in reads]))
 
     if unique_reads >= args.min_diff:
         state = 'UNIQUE'
