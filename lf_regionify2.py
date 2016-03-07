@@ -152,8 +152,7 @@ def map_cluster(cluster):
     cluster_map = np.zeros((cluster["stop"] - cluster["start"]))
     for read in cluster["reads"]:
         cluster_map[(read.pos - cluster["start"]):(read.pos + read.qlen - cluster["start"])] += 1
-    cluster["map"] = cluster_map
-    return cluster
+    return cluster_map
 
 
 def trim_clusters():
