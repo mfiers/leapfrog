@@ -56,7 +56,7 @@ def extract_clusters(sam):
     cluster = {"reads": [],
                "chromosome": "",
                "start": -1,
-               "stop": -1,}
+               "stop": -1}
 
     for i, read in enumerate(sam.fetch()):
         read_chromosome = sam.getrname(read.tid)
@@ -85,6 +85,42 @@ def extract_clusters(sam):
 
     # ensure the final cluster is not skipped
     yield cluster
+
+
+def split_gaps(cluster_generator):
+    """
+    Subdivides read-clusters based on gaps between non-overlapping reads.
+    Accepts a dictionary generator.
+    Returns a dictionary generator.
+    """
+    for cluster in cluster_generator:
+
+        # Dummy cluster for comparison with initial read
+        new_cluster = {"start": -1, "stop": -1}
+
+        for i, read in enumerate(cluster["reads"]):
+            read_start = read.pos
+            read_stop = read.pos + read.qlen
+
+            # if read overlaps the current cluster
+            if read_start < new_cluster["stop"]:
+
+                # add the read to the current cluster
+                new_cluster["reads"].append(read)
+                new_cluster["stop"] = read_stop
+
+            # else read is the start of a new cluster
+            else:
+
+                # yield the previous cluster but skip the first dummy cluster
+                if i > 0:
+                    yield new_cluster
+
+                # create a new cluster dictionary based on the current read
+                new_cluster = sub_cluster(cluster, [read])
+
+        # ensure the final cluster is not skipped
+        yield new_cluster
 
 
 def sub_cluster(cluster, read_subset, **kwargs):
@@ -158,15 +194,6 @@ def map_depth(cluster):
 def trim_clusters():
     """
     Trims read-clusters based on a read depth.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
-    """
-    pass
-
-
-def split_gaps():
-    """
-    Subdivides read-clusters with a read depth of 0.
     Accepts a dictionary generator.
     Returns a dictionary generator.
     """
