@@ -143,13 +143,17 @@ def split_orientation(cluster_generator):
             yield new_cluster
 
 
-def map_clusters():
+def map_cluster(cluster):
     """
     Appends a numpy array of read depth.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
+    Accepts a dictionary.
+    Returns a dictionary.
     """
-    pass
+    cluster_map = np.zeros((cluster["stop"] - cluster["start"]))
+    for read in cluster["reads"]:
+        cluster_map[(read.pos - cluster["start"]):(read.pos + read.qlen - cluster["start"])] += 1
+    cluster["map"] = cluster_map
+    return cluster
 
 
 def trim_clusters():
