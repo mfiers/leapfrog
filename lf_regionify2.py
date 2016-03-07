@@ -239,7 +239,13 @@ def construct_gff():
 
 
 def main():
-    pass
+    args = parse_args(sys.argv[1:])
+    sam = pysam.Samfile(args.input_bam, 'rb')
+    cluster_generator = extract_references(sam)
+    cluster_generator = split_gaps(cluster_generator)
+    cluster_generator = split_families(cluster_generator)
+    cluster_generator = split_orientation(cluster_generator)
+    cluster_generator = split_gaps(cluster_generator)
 
 
 if __name__ == '__main__':
