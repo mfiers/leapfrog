@@ -87,13 +87,30 @@ def extract_clusters(sam):
     yield cluster
 
 
-def split_families():
+def split_families(cluster_generator):
     """
     Subdivides read-clusters based on read family.
     Accepts a dictionary generator.
     Returns a dictionary generator.
     """
-    pass
+    for cluster in cluster_generator:
+        families = collections.defaultdict(list)
+        for read in cluster["reads"]:
+            try:
+                family = read.qname.split('__')[0].rsplit('/', 1)[1]
+            except IndexError:
+                family = read.qname.split('__')[0]
+            families[family].append(read)
+
+        for family, reads in families:
+            start = min([read.pos for read in reads])
+            stop = max([read.pos for read in reads])
+            sub_cluster = {"reads": reads,
+                           "chromosome": cluster["chromosome"],
+                           "family": family,
+                           "start": start,
+                           "stop": stop}
+            yield sub_cluster
 
 
 def split_orientation():
