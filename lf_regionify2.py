@@ -111,7 +111,7 @@ def sub_cluster(cluster, read_subset, **kwargs):
         cluster[key] = value
     cluster["reads"] = read_subset
     cluster["start"] = min([read.pos for read in read_subset])
-    cluster["stop"] = max([read.pos for read in read_subset])
+    cluster["stop"] = max([(read.pos + read.qlen) for read in read_subset])
     return cluster
 
 
