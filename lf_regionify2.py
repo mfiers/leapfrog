@@ -87,6 +87,18 @@ def extract_clusters(sam):
     yield cluster
 
 
+def extract_references(sam):
+    """
+    Takes a sam object and returns a cluster-dictionary per reference.
+    Accepts a pysam object.
+    Returns a dictionary generator.
+    """
+    for reference in sam.references:
+        cluster = {"reads": list(sam.fetch(reference)),
+                   "chromosome": reference}
+        yield cluster
+
+
 def split_gaps(cluster_generator):
     """
     Subdivides read-clusters based on gaps between non-overlapping reads.
