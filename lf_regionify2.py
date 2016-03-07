@@ -54,17 +54,17 @@ def extract_clusters(sam):
     """
 
     cluster = {"reads": [],
-               "chromosome": "",
+               "reference": "",
                "start": -1,
                "stop": -1}
 
     for i, read in enumerate(sam.fetch()):
-        read_chromosome = sam.getrname(read.tid)
+        read_reference = sam.getrname(read.tid)
         read_start = read.pos
         read_stop = read.pos + read.qlen
 
         # if read overlaps the current cluster
-        if (read_chromosome == cluster["chromosome"]) and (read_start < cluster["stop"]):
+        if (read_reference == cluster["reference"]) and (read_start < cluster["stop"]):
 
             # add the read to the current cluster
             cluster["reads"].append(read)
@@ -79,7 +79,7 @@ def extract_clusters(sam):
 
             # create a new cluster dictionary based on the current read
             cluster["reads"] = [read]
-            cluster["chromosome"] = read_chromosome
+            cluster["reference"] = read_reference
             cluster["start"] = read_start
             cluster["stop"] = read_stop
 
@@ -95,7 +95,7 @@ def extract_references(sam):
     """
     for reference in sam.references:
         cluster = {"reads": list(sam.fetch(reference)),
-                   "chromosome": reference}
+                   "reference": reference}
         yield cluster
 
 
