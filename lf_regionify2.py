@@ -99,6 +99,22 @@ def extract_references(sam):
         yield cluster
 
 
+def sub_cluster(cluster, read_subset, **kwargs):
+    """
+    Returns a modified cluster with a subset of the original reads.
+    Additional parameters can be added as **kwargs.
+    Automatically recalculates start and stop positions based on the subset of reads passed.
+    Accepts a dictionary
+    Returns a dictionary
+    """
+    for key, value in kwargs.items():
+        cluster[key] = value
+    cluster["reads"] = read_subset
+    cluster["start"] = min([read.pos for read in read_subset])
+    cluster["stop"] = max([read.pos for read in read_subset])
+    return cluster
+
+
 def split_gaps(cluster_generator):
     """
     Subdivides read-clusters based on gaps between non-overlapping reads.
@@ -133,22 +149,6 @@ def split_gaps(cluster_generator):
 
         # ensure the final cluster is not skipped
         yield new_cluster
-
-
-def sub_cluster(cluster, read_subset, **kwargs):
-    """
-    Returns a modified cluster with a subset of the original reads.
-    Additional parameters can be added as **kwargs.
-    Automatically recalculates start and stop positions based on the subset of reads passed.
-    Accepts a dictionary
-    Returns a dictionary
-    """
-    for key, value in kwargs.items():
-        cluster[key] = value
-    cluster["reads"] = read_subset
-    cluster["start"] = min([read.pos for read in read_subset])
-    cluster["stop"] = max([read.pos for read in read_subset])
-    return cluster
 
 
 def split_families(cluster_generator):
