@@ -87,6 +87,22 @@ def extract_clusters(sam):
     yield cluster
 
 
+def sub_cluster(cluster, read_subset, **kwargs):
+    """
+    Returns a modified cluster with a subset of the original reads.
+    Additional parameters can be added as **kwargs.
+    Automatically recalculates start and stop positions based on the subset of reads passed.
+    Accepts a dictionary
+    Returns a dictionary
+    """
+    for key, value in kwargs.items():
+        cluster[key] = value
+    cluster["reads"] = read_subset
+    cluster["start"] = min([read.pos for read in read_subset])
+    cluster["stop"] = max([read.pos for read in read_subset])
+    return cluster
+
+
 def split_families(cluster_generator):
     """
     Subdivides read-clusters based on read family.
@@ -103,14 +119,8 @@ def split_families(cluster_generator):
             families[family].append(read)
 
         for family, reads in families:
-            start = min([read.pos for read in reads])
-            stop = max([read.pos for read in reads])
-            sub_cluster = {"reads": reads,
-                           "chromosome": cluster["chromosome"],
-                           "family": family,
-                           "start": start,
-                           "stop": stop}
-            yield sub_cluster
+            new_cluster = sub_cluster(cluster, reads, family=family)
+            yield new_cluster
 
 
 def split_orientation(cluster_generator):
@@ -121,7 +131,7 @@ def split_orientation(cluster_generator):
     """
     for cluster in cluster_generator:
         orientations = {"forwards": [],
-                       "reverse": []}
+                        "reverse": []}
         for read in cluster["reads"]:
             if read.is_reverse:
                 orientations["reverse"].append(read)
@@ -129,15 +139,8 @@ def split_orientation(cluster_generator):
                 orientations["forwards"].append(read)
 
         for orientation, reads in orientations:
-            start = min([read.pos for read in reads])
-            stop = max([read.pos for read in reads])
-            sub_cluster = {"reads": reads,
-                           "chromosome": cluster["chromosome"],
-                           "family": cluster["family"],
-                           "orientation": orientation,
-                           "start": start,
-                           "stop": stop}
-            yield sub_cluster
+            new_cluster = sub_cluster(cluster, reads, orientation=orientation)
+            yield new_cluster
 
 
 def map_clusters():
