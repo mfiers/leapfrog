@@ -45,14 +45,46 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def extract_clusters():
+def extract_clusters(sam):
     """
     Extracts all clusters of overlapping reads from a sorted, indexed pysam object.
     Generates a dictionary per cluster.
     Accepts a pysam object.
     Returns a dictionary generator.
     """
-    pass
+
+    cluster = {"reads": [],
+               "chromosome": "",
+               "start": -1,
+               "stop": -1,}
+
+    for i, read in enumerate(sam.fetch()):
+        read_chromosome = sam.getrname(read.tid)
+        read_start = read.pos
+        read_stop = read.pos + read.qlen
+
+        # if read overlaps the current cluster
+        if (read_chromosome == cluster["chromosome"]) and (read_start < cluster["stop"]):
+
+            # add the read to the current cluster
+            cluster["reads"].append(read)
+            cluster["stop"] = read_stop
+
+        # else read is the start of a new cluster
+        else:
+
+            # yield the previous cluster but skip the first blank cluster
+            if i > 0:
+                yield cluster
+
+            # create a new cluster dictionary based on the current read
+            cluster["reads"] = [read]
+            cluster["chromosome"] = read_chromosome
+            cluster["start"] = read_start
+            cluster["stop"] = read_stop
+
+    # ensure the final cluster is not skipped
+    yield cluster
 
 
 def split_families():
