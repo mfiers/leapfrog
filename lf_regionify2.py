@@ -113,13 +113,31 @@ def split_families(cluster_generator):
             yield sub_cluster
 
 
-def split_orientation():
+def split_orientation(cluster_generator):
     """
     Subdivides read-clusters based on read orientation.
     Accepts a dictionary generator.
     Returns a dictionary generator.
     """
-    pass
+    for cluster in cluster_generator:
+        orientations = {"forwards": [],
+                       "reverse": []}
+        for read in cluster["reads"]:
+            if read.is_reverse:
+                orientations["reverse"].append(read)
+            else:
+                orientations["forwards"].append(read)
+
+        for orientation, reads in orientations:
+            start = min([read.pos for read in reads])
+            stop = max([read.pos for read in reads])
+            sub_cluster = {"reads": reads,
+                           "chromosome": cluster["chromosome"],
+                           "family": cluster["family"],
+                           "orientation": orientation,
+                           "start": start,
+                           "stop": stop}
+            yield sub_cluster
 
 
 def map_clusters():
