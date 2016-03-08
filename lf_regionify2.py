@@ -5,7 +5,7 @@ import numpy as np
 import pysam
 import argparse
 import collections
-
+import pdb
 
 def parse_args(args):
     parser = argparse.ArgumentParser('Identify transposon flanking regions')
@@ -180,7 +180,7 @@ def split_families(cluster_generator):
                 family = read.qname.split('__')[0]
             families[family].append(read)
 
-        for family, reads in families:
+        for family, reads in families.items():
             child_cluster = sub_cluster(parent_cluster, reads, family=family)
             yield child_cluster
 
@@ -200,9 +200,10 @@ def split_orientation(cluster_generator):
             else:
                 orientations["forwards"].append(read)
 
-        for orientation, reads in orientations:
-            child_cluster = sub_cluster(parent_cluster, reads, orientation=orientation)
-            yield child_cluster
+        for orientation, reads in orientations.items():
+            if len(reads) > 0:
+                child_cluster = sub_cluster(parent_cluster, reads, orientation=orientation)
+                yield child_cluster
 
 
 def map_depth(cluster):
