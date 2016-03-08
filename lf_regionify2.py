@@ -109,15 +109,18 @@ def sub_cluster(parent_cluster, read_subset, **kwargs):
     Returns a dictionary
     """
     child_cluster = {}
+
     # avoid passing reference to parent cluster or parent clusters reads
     for key in parent_cluster:
         if key in ("reads", "start", "stop"):
             pass
         else:
             child_cluster[key] = parent_cluster[key]
+
     # add new attributes passed as kwargs to child cluster
     for key, value in kwargs.items():
         child_cluster[key] = value
+
     # add the explicitly passed reads to child cluster
     child_cluster["reads"] = read_subset
     child_cluster["start"] = min([read.pos for read in read_subset])
@@ -131,21 +134,21 @@ def split_gaps(cluster_generator):
     Accepts a dictionary generator.
     Returns a dictionary generator.
     """
-    for cluster in cluster_generator:
+    for parent_cluster in cluster_generator:
 
         # Dummy cluster for comparison with initial read
-        new_cluster = {"start": -1, "stop": -1}
+        child_cluster = {"start": -1, "stop": -1}
 
-        for i, read in enumerate(cluster["reads"]):
+        for i, read in enumerate(parent_cluster["reads"]):
             read_start = read.pos
             read_stop = read.pos + read.qlen
 
             # if read overlaps the current cluster
-            if read_start < new_cluster["stop"]:
+            if read_start < child_cluster["stop"]:
 
                 # add the read to the current cluster
-                new_cluster["reads"].append(read)
-                new_cluster["stop"] = read_stop
+                child_cluster["reads"].append(read)
+                child_cluster["stop"] = read_stop
 
             # else read is the start of a new cluster
             else:
@@ -153,13 +156,13 @@ def split_gaps(cluster_generator):
                 # yield the previous cluster but skip the first dummy cluster
                 if i > 0:
 
-                    yield new_cluster
+                    yield child_cluster
 
                 # create a new cluster dictionary based on the current read
-                new_cluster = sub_cluster(cluster, [read])
+                child_cluster = sub_cluster(parent_cluster, [read])
 
         # ensure the final cluster is not skipped
-        yield new_cluster
+        yield child_cluster
 
 
 def split_families(cluster_generator):
@@ -168,9 +171,9 @@ def split_families(cluster_generator):
     Accepts a dictionary generator.
     Returns a dictionary generator.
     """
-    for cluster in cluster_generator:
+    for parent_cluster in cluster_generator:
         families = collections.defaultdict(list)
-        for read in cluster["reads"]:
+        for read in parent_cluster["reads"]:
             try:
                 family = read.qname.split('__')[0].rsplit('/', 1)[1]
             except IndexError:
@@ -178,8 +181,8 @@ def split_families(cluster_generator):
             families[family].append(read)
 
         for family, reads in families:
-            new_cluster = sub_cluster(cluster, reads, family=family)
-            yield new_cluster
+            child_cluster = sub_cluster(parent_cluster, reads, family=family)
+            yield child_cluster
 
 
 def split_orientation(cluster_generator):
@@ -188,18 +191,18 @@ def split_orientation(cluster_generator):
     Accepts a dictionary generator.
     Returns a dictionary generator.
     """
-    for cluster in cluster_generator:
+    for parent_cluster in cluster_generator:
         orientations = {"forwards": [],
                         "reverse": []}
-        for read in cluster["reads"]:
+        for read in parent_cluster["reads"]:
             if read.is_reverse:
                 orientations["reverse"].append(read)
             else:
                 orientations["forwards"].append(read)
 
         for orientation, reads in orientations:
-            new_cluster = sub_cluster(cluster, reads, orientation=orientation)
-            yield new_cluster
+            child_cluster = sub_cluster(parent_cluster, reads, orientation=orientation)
+            yield child_cluster
 
 
 def map_depth(cluster):
