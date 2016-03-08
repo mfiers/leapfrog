@@ -206,6 +206,44 @@ def split_orientation(cluster_generator):
                 yield child_cluster
 
 
+def filter_unique(cluster_generator, threshold):
+    """
+    Filters read-clusters by the amount of uniquely mapped reads.
+    threshold=args.min_diff
+    Accepts a dictionary generator.
+    Returns a dictionary generator.
+    """
+    for parent_cluster in cluster_generator:
+        unique_reads = []
+        for read in parent_cluster["reads"]:
+            tag_as = -999
+            tag_xs = -999
+            for tag in read.tags:
+                if tag[0] == 'AS':
+                    tag_as = tag[1]
+                if tag[0] == 'XS':
+                    tag_xs = tag[1]
+
+            score = tag_as - tag_xs
+            if score >= threshold:
+                unique_reads.append(read)
+            else:
+                pass
+
+        if len(unique_reads) > 0:
+            child_cluster = sub_cluster(parent_cluster, unique_reads, read_type='UNIQUE')
+            yield child_cluster
+
+
+def filter_depth():
+    """
+    Filters read-clusters based on maximum read depth.
+    Accepts a dictionary generator.
+    Returns a dictionary generator.
+    """
+    pass
+
+
 def map_depth(cluster):
     """
     Appends a numpy array of read depth.
@@ -221,24 +259,6 @@ def map_depth(cluster):
 def trim_clusters():
     """
     Trims read-clusters based on a read depth.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
-    """
-    pass
-
-
-def filter_unique():
-    """
-    Filters read-clusters by the amount of uniquely mapped reads.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
-    """
-    pass
-
-
-def filter_depth():
-    """
-    Filters read-clusters based on maximum read depth.
     Accepts a dictionary generator.
     Returns a dictionary generator.
     """
