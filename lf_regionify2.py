@@ -6,6 +6,7 @@ import pysam
 import argparse
 import collections
 
+
 def parse_args(args):
     parser = argparse.ArgumentParser('Identify transposon flanking regions')
     parser.add_argument('input_bam')
@@ -99,7 +100,7 @@ def extract_references(sam):
         yield cluster
 
 
-def sub_cluster(cluster, read_subset, **kwargs):
+def sub_cluster(parent_cluster, read_subset, **kwargs):
     """
     Returns a modified cluster with a subset of the original reads.
     Additional parameters can be added as **kwargs.
@@ -107,12 +108,21 @@ def sub_cluster(cluster, read_subset, **kwargs):
     Accepts a dictionary
     Returns a dictionary
     """
+    child_cluster = {}
+    # avoid passing reference to parent cluster or parent clusters reads
+    for key in parent_cluster:
+        if key in ("reads", "start", "stop"):
+            pass
+        else:
+            child_cluster[key] = parent_cluster[key]
+    # add new attributes passed as kwargs to child cluster
     for key, value in kwargs.items():
-        cluster[key] = value
-    cluster["reads"] = read_subset
-    cluster["start"] = min([read.pos for read in read_subset])
-    cluster["stop"] = max([(read.pos + read.qlen) for read in read_subset])
-    return cluster
+        child_cluster[key] = value
+    # add the explicitly passed reads to child cluster
+    child_cluster["reads"] = read_subset
+    child_cluster["start"] = min([read.pos for read in read_subset])
+    child_cluster["stop"] = max([(read.pos + read.qlen) for read in read_subset])
+    return child_cluster
 
 
 def split_gaps(cluster_generator):
@@ -142,6 +152,7 @@ def split_gaps(cluster_generator):
 
                 # yield the previous cluster but skip the first dummy cluster
                 if i > 0:
+
                     yield new_cluster
 
                 # create a new cluster dictionary based on the current read
