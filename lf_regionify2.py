@@ -235,7 +235,7 @@ def filter_unique(cluster_generator, threshold):
             yield child_cluster
 
 
-def filter_depth():
+def filter_depth(cluster_generator, threshold):
     """
     Filters read-clusters based on maximum read depth.
     Accepts a dictionary generator.
@@ -250,10 +250,29 @@ def map_depth(cluster):
     Accepts a dictionary.
     Returns a dictionary.
     """
-    depth_map = np.zeros((cluster["stop"] - cluster["start"]))
+    depth = np.zeros((cluster["stop"] - cluster["start"]))
     for read in cluster["reads"]:
-        depth_map[(read.pos - cluster["start"]):(read.pos + read.qlen - cluster["start"])] += 1
-    return depth_map
+        depth[(read.pos - cluster["start"]):(read.pos + read.qlen - cluster["start"])] += 1
+    return depth
+
+
+def group_clusters(cluster_generator, *args):
+    """
+    Groups cluster-dictionaries by unique combinations of values for an arbitrary number of keys.
+    Groups are dictionaries that contain a list of clusters and the key value pairs used to categorise them.
+    Accepts a dictionary generator.
+    Returns a dictionary generator.
+    """
+    groups = {}
+    for cluster in cluster_generator:
+        group = '_'.join([cluster[key] for key in args])
+        if group not in groups:
+            groups[group] = {"clusters": []}
+            for key in args:
+                groups[group][key] = cluster[key]
+        groups[group]["clusters"].append(cluster)
+    for key, values in groups.items():
+        yield values
 
 
 def trim_clusters():
