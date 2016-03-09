@@ -160,8 +160,8 @@ def split_gaps(cluster_generator):
 
                 # create a new cluster dictionary based on the current read
                 child_cluster = sub_cluster(parent_cluster, [read])
-                child_cluster["start"] = min([read.pos for read in read_subset])
-                child_cluster["stop"] = max([(read.pos + read.qlen) for read in read_subset])
+                child_cluster["start"] = min([read.pos for read in child_cluster["reads"]])
+                child_cluster["stop"] = max([(read.pos + read.qlen) for read in child_cluster["reads"]])
 
         # ensure the final cluster is not skipped
         yield child_cluster
