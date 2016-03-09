@@ -275,6 +275,25 @@ def group_clusters(cluster_generator, *args):
         yield values
 
 
+def identify_features(cluster_generator, *args):
+    group_generator = group_clusters(cluster_generator, *args)
+    for group in group_generator:
+        group["depth"] = np.empty(0, dtype = int)
+        for cluster in group["clusters"]:
+            cluster["depth"] = map_depth(cluster)
+            group["depth"] = np.concatenate((group["depth"], cluster["depth"]))
+        group["mean"] = group["depth"].mean()
+        group["std"] = group["depth"].std()
+        group["threshold"] = group["mean"] + (2 * group["std"])
+        for cluster in group["clusters"]:
+            cluster["threshold"] = group["threshold"]
+            cluster["feature"] = cluster["depth"] > cluster["threshold"]
+            yield cluster
+
+
+def extract_features(cluster)
+
+
 def trim_clusters():
     """
     Trims read-clusters based on a read depth.
