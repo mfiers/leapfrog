@@ -111,6 +111,7 @@ def sub_cluster(parent_cluster, read_subset, **kwargs):
     child_cluster = {}
 
     # avoid passing reference to parent cluster or parent clusters reads
+    # start, stop parameters are not inherited and should be re calculated
     for key in parent_cluster:
         if key in ("reads", "start", "stop"):
             pass
@@ -123,8 +124,7 @@ def sub_cluster(parent_cluster, read_subset, **kwargs):
 
     # add the explicitly passed reads to child cluster
     child_cluster["reads"] = read_subset
-    child_cluster["start"] = min([read.pos for read in read_subset])
-    child_cluster["stop"] = max([(read.pos + read.qlen) for read in read_subset])
+
     return child_cluster
 
 
@@ -160,6 +160,8 @@ def split_gaps(cluster_generator):
 
                 # create a new cluster dictionary based on the current read
                 child_cluster = sub_cluster(parent_cluster, [read])
+                child_cluster["start"] = min([read.pos for read in read_subset])
+                child_cluster["stop"] = max([(read.pos + read.qlen) for read in read_subset])
 
         # ensure the final cluster is not skipped
         yield child_cluster
@@ -291,7 +293,7 @@ def identify_features(cluster_generator, *args):
             yield cluster
 
 
-def extract_features(cluster)
+def extract_features(cluster_generator)
 
 
 def trim_clusters():
