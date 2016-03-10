@@ -293,7 +293,30 @@ def identify_features(cluster_generator, *args):
             yield cluster
 
 
-def extract_features(cluster_generator)
+def extract_features(cluster_generator):
+    for cluster in cluster_generator:
+
+        feature = {"start": 0, "stop": 0}
+        for key in cluster:
+            if key not in ["reads", "start", "stop"]:
+                feature[key] = cluster[key]
+            else:
+                pass
+
+        # determine position of features
+        previously = False
+        for position, currently in enumerate(["feature"]):
+
+            if not previously and currently:
+                # start of a feature
+                previously = True
+                feature["start"] = position + 1
+
+            elif previously and not currently:
+                # end of a feature
+                previously = False
+                feature["stop"] = position
+                yield feature
 
 
 def trim_clusters():
