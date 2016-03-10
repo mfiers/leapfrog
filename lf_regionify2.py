@@ -94,7 +94,7 @@ def extract_references(sam):
     Accepts a pysam object.
     Returns a dictionary generator.
     """
-    for reference, length in sam.references, sam.lengths:
+    for reference, length in zip(sam.references, sam.lengths):
         cluster = {"reads": list(sam.fetch(reference)),
                    "reference": reference,
                    "start": 0,
@@ -312,14 +312,14 @@ def extract_features(cluster_generator):
 
         feature = {"start": 0, "stop": 0, "mean_depth": 0}
         for key in cluster:
-            if key not in ["reads", "start", "stop"]:
+            if key not in ["reads", "start", "stop", "feature", "depth"]:
                 feature[key] = cluster[key]
             else:
                 pass
 
         # determine position of features
         previously_in_feature = False
-        for position, currently_in_feature in enumerate(["feature"]):
+        for position, currently_in_feature in enumerate(cluster["feature"]):
 
             if not previously_in_feature and currently_in_feature:
                 # start of a feature
@@ -330,7 +330,8 @@ def extract_features(cluster_generator):
                 # end of a feature
                 previously_in_feature = False
                 feature["stop"] = position
-                feature["mean_depth"] = cluster["depth"][feature["start"] - 1, feature["stop"]].mean()
+                feature["mean_depth"] = cluster["depth"][feature["start"] - 1: feature["stop"]].mean()
+                feature["depth"] = cluster["depth"][feature["start"] - 1: feature["stop"]]
                 yield feature
 
 
@@ -348,6 +349,7 @@ def format_features(feature_generator):
                               str(feature["stop"]),
                               str(feature["mean_depth"]),
                               feature["orientation"],
+                              ".",
                               "ID=reps" + feature["reference"] + str(feature["start"]) +
                               feature["family"] + ";Name=" + feature["family"]])
         yield formated
