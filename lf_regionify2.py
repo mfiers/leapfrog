@@ -5,7 +5,7 @@ import numpy as np
 import pysam
 import argparse
 import collections
-import pdb
+
 
 def parse_args(args):
     parser = argparse.ArgumentParser('Identify transposon flanking regions')
@@ -378,6 +378,8 @@ def construct_gff():
 
 
 def main():
+    args = parse_args(sys.argv[1:])
+    sam = pysam.Samfile(args.input_bam, 'rb')
     cluster_generator = extract_references(sam)
     cluster_generator = split_families(cluster_generator)
     cluster_generator = split_orientation(cluster_generator)
