@@ -248,9 +248,9 @@ def filter_depth(cluster_generator, threshold):
 
 def map_depth(cluster):
     """
-    Appends a numpy array of read depth.
+    Calculates the read depth of a cluster.
     Accepts a dictionary.
-    Returns a dictionary.
+    Returns an array.
     """
     depth = np.zeros((cluster["stop"] - cluster["start"]))
     for read in cluster["reads"]:
@@ -278,6 +278,13 @@ def group_clusters(cluster_generator, *args):
 
 
 def identify_features(cluster_generator, *args):
+    """
+    Identifies features by identifying loci with a read depth of two standard deviations above the mean.
+    Clusters are grouped together by a combination attributes as specified by *args.
+    This allows for calculating the mean and standard deviation across multiple references.
+    Accepts a dictionary generator.
+    Returns a dictionary generator.
+    """
     group_generator = group_clusters(cluster_generator, *args)
     for group in group_generator:
         group["depth"] = np.empty(0, dtype = int)
@@ -294,6 +301,13 @@ def identify_features(cluster_generator, *args):
 
 
 def extract_features(cluster_generator):
+    """
+    Extracts features for a gff file from clusters based of the feature attribute-array.
+    Features are returned as dictionaries with start and stop attributes and inherit other attributes
+    from their parent cluster.
+    Accepts a dictionary generator.
+    Returns a dictionary generator.
+    """
     for cluster in cluster_generator:
 
         feature = {"start": 0, "stop": 0}
