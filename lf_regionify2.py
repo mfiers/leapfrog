@@ -194,13 +194,13 @@ def split_orientation(cluster_generator):
     Returns a dictionary generator.
     """
     for parent_cluster in cluster_generator:
-        orientations = {"forwards": [],
-                        "reverse": []}
+        orientations = {"+": [],
+                        "-": []}
         for read in parent_cluster["reads"]:
             if read.is_reverse:
-                orientations["reverse"].append(read)
+                orientations["-"].append(read)
             else:
-                orientations["forwards"].append(read)
+                orientations["+"].append(read)
 
         for orientation, reads in orientations.items():
             if len(reads) > 0:
@@ -310,7 +310,7 @@ def extract_features(cluster_generator):
     """
     for cluster in cluster_generator:
 
-        feature = {"start": 0, "stop": 0}
+        feature = {"start": 0, "stop": 0, "mean_depth": 0}
         for key in cluster:
             if key not in ["reads", "start", "stop"]:
                 feature[key] = cluster[key]
@@ -318,19 +318,39 @@ def extract_features(cluster_generator):
                 pass
 
         # determine position of features
-        previously = False
-        for position, currently in enumerate(["feature"]):
+        previously_in_feature = False
+        for position, currently_in_feature in enumerate(["feature"]):
 
-            if not previously and currently:
+            if not previously_in_feature and currently_in_feature:
                 # start of a feature
-                previously = True
+                previously_in_feature = True
                 feature["start"] = position + 1
 
-            elif previously and not currently:
+            elif previously_in_feature and not currently_in_feature:
                 # end of a feature
-                previously = False
+                previously_in_feature = False
                 feature["stop"] = position
+                feature["mean_depth"] = cluster["depth"][feature["start"] - 1, feature["stop"]].mean()
                 yield feature
+
+
+def format_features(feature_generator):
+    """
+    Formats feature dictionaries as strings for a gff file.
+    Accepts a dictionary generator.
+    Returns a string generator.
+    """
+    for feature in feature_generator:
+        formated = "\t".join([feature["reference"],
+                              "REFS",
+                              "REFS." + feature["read_type"] + "." + feature["family"],
+                              str(feature["start"]),
+                              str(feature["stop"]),
+                              str(feature["mean_depth"]),
+                              feature["orientation"],
+                              "ID=reps" + feature["reference"] + str(feature["start"]) +
+                              feature["family"] + ";Name=" + feature["family"]])
+        yield formated
 
 
 def trim_clusters():
