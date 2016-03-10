@@ -94,9 +94,11 @@ def extract_references(sam):
     Accepts a pysam object.
     Returns a dictionary generator.
     """
-    for reference in sam.references:
+    for reference, length in sam.references, sam.lengths:
         cluster = {"reads": list(sam.fetch(reference)),
-                   "reference": reference}
+                   "reference": reference,
+                   "start": 0,
+                   "stop": int(length)}
         yield cluster
 
 
@@ -104,16 +106,14 @@ def sub_cluster(parent_cluster, read_subset, **kwargs):
     """
     Returns a modified cluster with a subset of the original reads.
     Additional parameters can be added as **kwargs.
-    Automatically recalculates start and stop positions based on the subset of reads passed.
     Accepts a dictionary
     Returns a dictionary
     """
     child_cluster = {}
 
     # avoid passing reference to parent cluster or parent clusters reads
-    # start, stop parameters are not inherited and should be re calculated
     for key in parent_cluster:
-        if key in ("reads", "start", "stop"):
+        if key == "reads":
             pass
         else:
             child_cluster[key] = parent_cluster[key]
