@@ -355,6 +355,11 @@ def format_features(feature_generator):
         yield formated
 
 
+def output_features(formatted_features):
+    for feature in formatted_features:
+        print(feature)
+
+
 def trim_clusters():
     """
     Trims read-clusters based on a read depth.
@@ -373,13 +378,14 @@ def construct_gff():
 
 
 def main():
-    args = parse_args(sys.argv[1:])
-    sam = pysam.Samfile(args.input_bam, 'rb')
     cluster_generator = extract_references(sam)
-    cluster_generator = split_gaps(cluster_generator)
     cluster_generator = split_families(cluster_generator)
     cluster_generator = split_orientation(cluster_generator)
-    cluster_generator = split_gaps(cluster_generator)
+    cluster_generator = filter_unique(cluster_generator, 5)
+    cluster_generator = identify_features(cluster_generator, "family", "orientation")
+    feature_generator = extract_features(cluster_generator)
+    formatted_features = format_features(feature_generator)
+    output_features(formatted_features)
 
 
 if __name__ == '__main__':
