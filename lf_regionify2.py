@@ -277,7 +277,7 @@ def group_clusters(cluster_generator, *args):
         yield values
 
 
-def identify_features(cluster_generator, *args):
+def identify_features_by_std(cluster_generator, *args):
     """
     Identifies features by identifying loci with a read depth of two standard deviations above the mean.
     Clusters are grouped together by a combination attributes as specified by *args.
@@ -298,6 +298,20 @@ def identify_features(cluster_generator, *args):
             cluster["threshold"] = group["threshold"]
             cluster["feature"] = cluster["depth"] > cluster["threshold"]
             yield cluster
+
+
+def identify_features_by_cov(cluster_generator, args):
+    """
+    Identifies features that are over a minimum threshold depth in args
+    :param cluster_generator:  a dictionary generator
+    :param args: command line arguments
+    :return: a dictionary generator
+    """
+    threshold = args.trim_cov
+    for cluster in cluster_generator:
+        cluster["depth"] = map_depth(cluster)
+        cluster["feature"] = cluster["depth"] > threshold
+        yield cluster
 
 
 def extract_features(cluster_generator):
@@ -384,7 +398,7 @@ def main():
     cluster_generator = split_families(cluster_generator)
     cluster_generator = split_orientation(cluster_generator)
     cluster_generator = filter_unique(cluster_generator, 5)
-    cluster_generator = identify_features(cluster_generator, "family", "orientation")
+    cluster_generator = identify_features_by_cov(cluster_generator, args)
     feature_generator = extract_features(cluster_generator)
     formatted_features = format_features(feature_generator)
     output_features(formatted_features)
