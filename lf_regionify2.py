@@ -5,6 +5,7 @@ import numpy as np
 import pysam
 import argparse
 import collections
+from sklearn.cluster import DBSCAN
 
 
 def parse_args(args):
@@ -331,6 +332,26 @@ def identify_features_by_cov(cluster_generator, args):
         cluster["feature"] = cluster["depth"] > threshold
         yield cluster
 
+
+def identify_features_by_dbscan(cluster_generator, eps=40, min_tips=5):
+    """
+    Identifies features based on a DBSCAN clustering algorithm on tip positions
+    :param eps: maximum distance between read tips to be considered in the same neighbourhood
+    :param min_tips: minimum number of tips in a neighbourhood to count as a feature
+    :param cluster_generator:  a dictionary generator
+    :return: a dictionary generator
+    """
+    for cluster in cluster_generator:
+        tips = read_tips(cluster)
+        input_tips = np.array(zip(read_tips,np.zeros(len(tips))), dtype=np.int)
+        dbscan = DBSCAN(eps=eps, min_samples=min_tips).fit(input_tips)
+        cluster["feature"] = np.zeros((cluster["stop"] - cluster["start"]), dtype=bool)
+        groups = np.unique(dbscan.labels_)
+        groups = groups[groups >= 0]
+        for group in groups:
+            group_tips = tips[dbscan.labels_ == group]
+            cluster["feature"][min(group_tips) - 1: max(group_tips)] = True
+        yield cluster
 
 def extract_features(cluster_generator):
     """
