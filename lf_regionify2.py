@@ -270,9 +270,9 @@ def read_tips(cluster):
     count = 0
     for read in cluster["reads"]:
         if read.is_reverse:
-            tips[count] = read.pos + read.qlen
-        else:
             tips[count] = read.pos
+        else:
+            tips[count] = read.pos + read.qlen
         count += 1
     return tips
 
@@ -333,7 +333,7 @@ def identify_features_by_cov(cluster_generator, args):
         yield cluster
 
 
-def identify_features_by_dbscan(cluster_generator, eps=40, min_tips=5):
+def identify_features_by_dbscan(cluster_generator, eps=80, min_tips=5):
     """
     Identifies features based on a DBSCAN clustering algorithm on tip positions
     :param eps: maximum distance between read tips to be considered in the same neighbourhood
@@ -354,6 +354,7 @@ def identify_features_by_dbscan(cluster_generator, eps=40, min_tips=5):
             cluster["feature"][min(group_tips) - 1: max(group_tips)] = True
         cluster["depth"] = read_depth(cluster)
         yield cluster
+
 
 def extract_features(cluster_generator):
     """
