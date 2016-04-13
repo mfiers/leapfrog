@@ -258,6 +258,24 @@ def read_depth(cluster):
     return depth
 
 
+def read_tips(cluster):
+    """
+    Returns the read end positions of a cluster based on orientation.
+    Returns right tip of forwards reads and left tip of reverse reads
+    Accepts a dictionary.
+    Returns an array.
+    """
+    tips = np.zeros(len(cluster["reads"]))
+    count = 0
+    for read in cluster["reads"]:
+        if read.is_reverse:
+            tips[count] = read.pos + read.qlen
+        else:
+            tips[count] = read.pos
+        count += 1
+    return tips
+
+
 def group_clusters(cluster_generator, *args):
     """
     Groups cluster-dictionaries by unique combinations of values for an arbitrary number of keys.
