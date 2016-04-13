@@ -246,7 +246,7 @@ def filter_depth(cluster_generator, threshold):
     pass
 
 
-def map_depth(cluster):
+def read_depth(cluster):
     """
     Calculates the read depth of a cluster.
     Accepts a dictionary.
@@ -289,7 +289,7 @@ def identify_features_by_std(cluster_generator, *args):
     for group in group_generator:
         group["depth"] = np.empty(0, dtype = int)
         for cluster in group["clusters"]:
-            cluster["depth"] = map_depth(cluster)
+            cluster["depth"] = read_depth(cluster)
             group["depth"] = np.concatenate((group["depth"], cluster["depth"]))
         group["mean"] = group["depth"].mean()
         group["std"] = group["depth"].std()
@@ -309,7 +309,7 @@ def identify_features_by_cov(cluster_generator, args):
     """
     threshold = args.trim_cov
     for cluster in cluster_generator:
-        cluster["depth"] = map_depth(cluster)
+        cluster["depth"] = read_depth(cluster)
         cluster["feature"] = cluster["depth"] > threshold
         yield cluster
 
