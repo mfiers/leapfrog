@@ -6,7 +6,7 @@ import pysam
 import argparse
 import collections
 from sklearn.cluster import DBSCAN
-
+from hdbscan import HDBSCAN
 
 def parse_args(args):
     parser = argparse.ArgumentParser('Identify transposon flanking regions')
@@ -274,7 +274,7 @@ def read_tips(cluster):
         else:
             tips[count] = read.pos + read.qlen
         count += 1
-    return tips
+    return tips.astype(np.int)
 
 
 def group_clusters(cluster_generator, *args):
@@ -347,6 +347,29 @@ def identify_features_by_dbscan(cluster_generator, eps=80, min_tips=5):
         dbscan = DBSCAN(eps=eps, min_samples=min_tips).fit(input_tips)
         cluster["feature"] = np.zeros((cluster["stop"] - cluster["start"]), dtype=bool)
         labels = dbscan.labels_.astype(np.int)
+        groups = np.unique(labels)
+        groups = groups[groups >= 0]
+        for group in groups:
+            group_tips = tips[labels == group]
+            cluster["feature"][min(group_tips) - 1: max(group_tips)] = True
+        cluster["depth"] = read_depth(cluster)
+        yield cluster
+
+
+def identify_features_by_hdbscan(cluster_generator, min_tips=5):
+    """
+    Identifies features based on a DBSCAN clustering algorithm on tip positions
+    :param eps: maximum distance between read tips to be considered in the same neighbourhood
+    :param min_tips: minimum number of tips in a neighbourhood to count as a feature
+    :param cluster_generator:  a dictionary generator
+    :return: a dictionary generator
+    """
+    for cluster in cluster_generator:
+        tips = read_tips(cluster)
+        input_tips = np.array(zip(tips, np.zeros(len(tips))), dtype=np.int)
+        hdbscan = HDBSCAN(min_cluster_size=min_tips).fit(input_tips)
+        cluster["feature"] = np.zeros((cluster["stop"] - cluster["start"]), dtype=bool)
+        labels = hdbscan.fit_predict(input_tips).astype(np.int)
         groups = np.unique(labels)
         groups = groups[groups >= 0]
         for group in groups:
