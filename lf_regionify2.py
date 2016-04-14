@@ -6,7 +6,7 @@ import pysam
 import argparse
 import collections
 from sklearn.cluster import DBSCAN
-from hdbscan import HDBSCAN
+import hdbscan
 
 def parse_args(args):
     parser = argparse.ArgumentParser('Identify transposon flanking regions')
@@ -365,11 +365,13 @@ def identify_features_by_hdbscan(cluster_generator, min_tips=5):
     :return: a dictionary generator
     """
     for cluster in cluster_generator:
+        if (len(cluster["reads"])) < min_tips:
+            continue
         tips = read_tips(cluster)
         input_tips = np.array(zip(tips, np.zeros(len(tips))), dtype=np.int)
-        hdbscan = HDBSCAN(min_cluster_size=min_tips).fit(input_tips)
+        hdb = hdbscan.HDBSCAN(min_cluster_size=min_tips)
         cluster["feature"] = np.zeros((cluster["stop"] - cluster["start"]), dtype=bool)
-        labels = hdbscan.fit_predict(input_tips).astype(np.int)
+        labels = hdb.fit_predict(input_tips).astype(np.int)
         groups = np.unique(labels)
         groups = groups[groups >= 0]
         for group in groups:
@@ -463,7 +465,7 @@ def main():
     cluster_generator = split_families(cluster_generator)
     cluster_generator = split_orientation(cluster_generator)
     cluster_generator = filter_unique(cluster_generator, 5)
-    cluster_generator = identify_features_by_dbscan(cluster_generator)
+    cluster_generator = identify_features_by_hdbscan(cluster_generator)
     feature_generator = extract_features(cluster_generator)
     formatted_features = format_features(feature_generator)
     output_features(formatted_features)
