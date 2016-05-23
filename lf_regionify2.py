@@ -51,8 +51,8 @@ def parse_args(args):
                               "in the the same neighbourhood"))
     parser.add_argument('--min_tips', type=int, default=5,
                         help=("When using the DBSCAN method to identify "
-                              "read clusters, minpts is the minimum number "
-                              "of points found in a single neighbourhood "
+                              "read clusters, min_tips is the minimum number "
+                              "of read tips found in a single neighbourhood "
                               "in order to count as a cluster"))
     return parser.parse_args(args)
 
