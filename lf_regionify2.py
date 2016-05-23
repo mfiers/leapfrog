@@ -49,7 +49,7 @@ def parse_args(args):
                               "read clusters, eps is the minimum distance "
                               "allowable between two points for inclusion "
                               "in the the same neighbourhood"))
-    parser.add_argument('--minpts', type=int, default=5,
+    parser.add_argument('--min_tips', type=int, default=5,
                         help=("When using the DBSCAN method to identify "
                               "read clusters, minpts is the minimum number "
                               "of points found in a single neighbourhood "
@@ -353,7 +353,7 @@ def identify_features_by_dbscan(cluster_generator, args):
     for cluster in cluster_generator:
         tips = read_tips(cluster).astype(np.int)
         input_tips = np.array(zip(tips, np.zeros(len(tips))), dtype=np.int)
-        dbscan = DBSCAN(eps=args.eps, min_samples=args.minpts).fit(input_tips)
+        dbscan = DBSCAN(eps=args.eps, min_samples=args.min_tips).fit(input_tips)
         cluster["feature"] = np.zeros((cluster["stop"] - cluster["start"]), dtype=bool)
         labels = dbscan.labels_.astype(np.int)
         groups = np.unique(labels)
