@@ -16,7 +16,7 @@ def parse_args(args):
 #                              "exported as a peak - the number "
 #                              "checked is the maximal coverage for "
 #                              "that set of mapping reads. (default 4)"))
-    parser.add_argument('-m', '--min_diff', type=int, default=5,
+    parser.add_argument('-s', '--stringency', type=int, default=5,
                         help=("Stringency to determine if a hit maps "
                               "uniquely. This score is the "
                               "minimal allowed difference between the "
@@ -238,7 +238,7 @@ def filter_unique(cluster_generator, args):
                     tag_xs = tag[1]
 
             score = tag_as - tag_xs
-            if score >= args.min_diff:
+            if score >= args.stringency:
                 unique_reads.append(read)
             else:
                 pass
