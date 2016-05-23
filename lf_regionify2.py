@@ -57,46 +57,46 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def extract_clusters(sam):
-    """
-    Extracts all clusters of overlapping reads from a sorted, indexed pysam object.
-    Generates a dictionary per cluster.
-    Accepts a pysam object.
-    Returns a dictionary generator.
-    """
-
-    cluster = {"reads": [],
-               "reference": "",
-               "start": -1,
-               "stop": -1}
-
-    for i, read in enumerate(sam.fetch()):
-        read_reference = sam.getrname(read.tid)
-        read_start = read.pos
-        read_stop = read.pos + read.qlen
-
-        # if read overlaps the current cluster
-        if (read_reference == cluster["reference"]) and (read_start < cluster["stop"]):
-
-            # add the read to the current cluster
-            cluster["reads"].append(read)
-            cluster["stop"] = read_stop
-
-        # else read is the start of a new cluster
-        else:
-
-            # yield the previous cluster but skip the first blank cluster
-            if i > 0:
-                yield cluster
-
-            # create a new cluster dictionary based on the current read
-            cluster["reads"] = [read]
-            cluster["reference"] = read_reference
-            cluster["start"] = read_start
-            cluster["stop"] = read_stop
-
-    # ensure the final cluster is not skipped
-    yield cluster
+# def extract_clusters(sam):
+#     """
+#     Extracts all clusters of overlapping reads from a sorted, indexed pysam object.
+#     Generates a dictionary per cluster.
+#     Accepts a pysam object.
+#     Returns a dictionary generator.
+#     """
+#
+#     cluster = {"reads": [],
+#                "reference": "",
+#                "start": -1,
+#                "stop": -1}
+#
+#     for i, read in enumerate(sam.fetch()):
+#         read_reference = sam.getrname(read.tid)
+#         read_start = read.pos
+#         read_stop = read.pos + read.qlen
+#
+#         # if read overlaps the current cluster
+#         if (read_reference == cluster["reference"]) and (read_start < cluster["stop"]):
+#
+#             # add the read to the current cluster
+#             cluster["reads"].append(read)
+#             cluster["stop"] = read_stop
+#
+#         # else read is the start of a new cluster
+#         else:
+#
+#             # yield the previous cluster but skip the first blank cluster
+#             if i > 0:
+#                 yield cluster
+#
+#             # create a new cluster dictionary based on the current read
+#             cluster["reads"] = [read]
+#             cluster["reference"] = read_reference
+#             cluster["start"] = read_start
+#             cluster["stop"] = read_stop
+#
+#     # ensure the final cluster is not skipped
+#     yield cluster
 
 
 def extract_references(sam):
@@ -139,43 +139,43 @@ def sub_cluster(parent_cluster, read_subset, **kwargs):
     return child_cluster
 
 
-def split_gaps(cluster_generator):
-    """
-    Subdivides read-clusters based on gaps between non-overlapping reads.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
-    """
-    for parent_cluster in cluster_generator:
-
-        # Dummy cluster for comparison with initial read
-        child_cluster = {"start": -1, "stop": -1}
-
-        for i, read in enumerate(parent_cluster["reads"]):
-            read_start = read.pos
-            read_stop = read.pos + read.qlen
-
-            # if read overlaps the current cluster
-            if read_start < child_cluster["stop"]:
-
-                # add the read to the current cluster
-                child_cluster["reads"].append(read)
-                child_cluster["stop"] = read_stop
-
-            # else read is the start of a new cluster
-            else:
-
-                # yield the previous cluster but skip the first dummy cluster
-                if i > 0:
-
-                    yield child_cluster
-
-                # create a new cluster dictionary based on the current read
-                child_cluster = sub_cluster(parent_cluster, [read])
-                child_cluster["start"] = min([read.pos for read in child_cluster["reads"]])
-                child_cluster["stop"] = max([(read.pos + read.qlen) for read in child_cluster["reads"]])
-
-        # ensure the final cluster is not skipped
-        yield child_cluster
+# def split_gaps(cluster_generator):
+#     """
+#     Subdivides read-clusters based on gaps between non-overlapping reads.
+#     Accepts a dictionary generator.
+#     Returns a dictionary generator.
+#     """
+#     for parent_cluster in cluster_generator:
+#
+#         # Dummy cluster for comparison with initial read
+#         child_cluster = {"start": -1, "stop": -1}
+#
+#         for i, read in enumerate(parent_cluster["reads"]):
+#             read_start = read.pos
+#             read_stop = read.pos + read.qlen
+#
+#             # if read overlaps the current cluster
+#             if read_start < child_cluster["stop"]:
+#
+#                 # add the read to the current cluster
+#                 child_cluster["reads"].append(read)
+#                 child_cluster["stop"] = read_stop
+#
+#             # else read is the start of a new cluster
+#             else:
+#
+#                 # yield the previous cluster but skip the first dummy cluster
+#                 if i > 0:
+#
+#                     yield child_cluster
+#
+#                 # create a new cluster dictionary based on the current read
+#                 child_cluster = sub_cluster(parent_cluster, [read])
+#                 child_cluster["start"] = min([read.pos for read in child_cluster["reads"]])
+#                 child_cluster["stop"] = max([(read.pos + read.qlen) for read in child_cluster["reads"]])
+#
+#         # ensure the final cluster is not skipped
+#         yield child_cluster
 
 
 def split_families(cluster_generator):
@@ -248,13 +248,13 @@ def filter_unique(cluster_generator, threshold):
             yield child_cluster
 
 
-def filter_depth(cluster_generator, threshold):
-    """
-    Filters read-clusters based on maximum read depth.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
-    """
-    pass
+# def filter_depth(cluster_generator, threshold):
+#     """
+#     Filters read-clusters based on maximum read depth.
+#     Accepts a dictionary generator.
+#     Returns a dictionary generator.
+#     """
+#     pass
 
 
 def read_depth(cluster):
@@ -269,7 +269,7 @@ def read_depth(cluster):
     return depth
 
 
-def read_tips(cluster):
+def read_tips(cluster):#
     """
     Returns the read end positions of a cluster based on orientation.
     Returns right tip of forwards reads and left tip of reverse reads
@@ -287,60 +287,60 @@ def read_tips(cluster):
     return tips.astype(np.int)
 
 
-def group_clusters(cluster_generator, *args):
-    """
-    Groups cluster-dictionaries by unique combinations of values for an arbitrary number of keys.
-    Groups are dictionaries that contain a list of clusters and the key value pairs used to categorise them.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
-    """
-    groups = {}
-    for cluster in cluster_generator:
-        group = '_'.join([cluster[key] for key in args])
-        if group not in groups:
-            groups[group] = {"clusters": []}
-            for key in args:
-                groups[group][key] = cluster[key]
-        groups[group]["clusters"].append(cluster)
-    for key, values in groups.items():
-        yield values
+# def group_clusters(cluster_generator, *args):
+#     """
+#     Groups cluster-dictionaries by unique combinations of values for an arbitrary number of keys.
+#     Groups are dictionaries that contain a list of clusters and the key value pairs used to categorise them.
+#     Accepts a dictionary generator.
+#     Returns a dictionary generator.
+#     """
+#     groups = {}
+#     for cluster in cluster_generator:
+#         group = '_'.join([cluster[key] for key in args])
+#         if group not in groups:
+#             groups[group] = {"clusters": []}
+#             for key in args:
+#                 groups[group][key] = cluster[key]
+#         groups[group]["clusters"].append(cluster)
+#     for key, values in groups.items():
+#         yield values
 
 
-def identify_features_by_std(cluster_generator, *args):
-    """
-    Identifies features by identifying loci with a read depth of two standard deviations above the mean.
-    Clusters are grouped together by a combination attributes as specified by *args.
-    This allows for calculating the mean and standard deviation across multiple references.
-    Accepts a dictionary generator.
-    Returns a dictionary generator.
-    """
-    group_generator = group_clusters(cluster_generator, *args)
-    for group in group_generator:
-        group["depth"] = np.empty(0, dtype = int)
-        for cluster in group["clusters"]:
-            cluster["depth"] = read_depth(cluster)
-            group["depth"] = np.concatenate((group["depth"], cluster["depth"]))
-        group["mean"] = group["depth"].mean()
-        group["std"] = group["depth"].std()
-        group["threshold"] = group["mean"] + (2 * group["std"])
-        for cluster in group["clusters"]:
-            cluster["threshold"] = group["threshold"]
-            cluster["feature"] = cluster["depth"] > cluster["threshold"]
-            yield cluster
+# def identify_features_by_std(cluster_generator, *args):
+#     """
+#     Identifies features by identifying loci with a read depth of two standard deviations above the mean.
+#     Clusters are grouped together by a combination attributes as specified by *args.
+#     This allows for calculating the mean and standard deviation across multiple references.
+#     Accepts a dictionary generator.
+#     Returns a dictionary generator.
+#     """
+#     group_generator = group_clusters(cluster_generator, *args)
+#     for group in group_generator:
+#         group["depth"] = np.empty(0, dtype = int)
+#         for cluster in group["clusters"]:
+#             cluster["depth"] = read_depth(cluster)
+#             group["depth"] = np.concatenate((group["depth"], cluster["depth"]))
+#         group["mean"] = group["depth"].mean()
+#         group["std"] = group["depth"].std()
+#         group["threshold"] = group["mean"] + (2 * group["std"])
+#         for cluster in group["clusters"]:
+#             cluster["threshold"] = group["threshold"]
+#             cluster["feature"] = cluster["depth"] > cluster["threshold"]
+#             yield cluster
 
 
-def identify_features_by_cov(cluster_generator, args):
-    """
-    Identifies features that are over a minimum threshold depth in args
-    :param cluster_generator:  a dictionary generator
-    :param args: command line arguments
-    :return: a dictionary generator
-    """
-    threshold = args.trim_cov
-    for cluster in cluster_generator:
-        cluster["depth"] = read_depth(cluster)
-        cluster["feature"] = cluster["depth"] > threshold
-        yield cluster
+# def identify_features_by_cov(cluster_generator, args):
+#     """
+#     Identifies features that are over a minimum threshold depth in args
+#     :param cluster_generator:  a dictionary generator
+#     :param args: command line arguments
+#     :return: a dictionary generator
+#     """
+#     threshold = args.trim_cov
+#     for cluster in cluster_generator:
+#         cluster["depth"] = read_depth(cluster)
+#         cluster["feature"] = cluster["depth"] > threshold
+#         yield cluster
 
 
 def identify_features_by_dbscan(cluster_generator, args):
