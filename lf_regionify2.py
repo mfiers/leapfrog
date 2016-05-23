@@ -44,6 +44,16 @@ def parse_args(args):
                         action='store_true', default=False,
                         help=("also output peaks which are no likely "
                               "to be uniquely mapped"))
+    parser.add_argument('--eps', type=int, default=100,
+                        help=("When using the DBSCAN method to identify "
+                              "read clusters, eps is the minimum distance "
+                              "allowable between two points for inclusion "
+                              "in the the same neighbourhood"))
+    parser.add_argument('--minpts', type=int, default=5,
+                        help=("When using the DBSCAN method to identify "
+                              "read clusters, minpts is the minimum number "
+                              "of points found in a single neighbourhood "
+                              "in order to count as a cluster"))
     return parser.parse_args(args)
 
 
@@ -333,18 +343,17 @@ def identify_features_by_cov(cluster_generator, args):
         yield cluster
 
 
-def identify_features_by_dbscan(cluster_generator, eps=80, min_tips=5):
+def identify_features_by_dbscan(cluster_generator, args):
     """
     Identifies features based on a DBSCAN clustering algorithm on tip positions
-    :param eps: maximum distance between read tips to be considered in the same neighbourhood
-    :param min_tips: minimum number of tips in a neighbourhood to count as a feature
+    :param args: command line arguments
     :param cluster_generator:  a dictionary generator
     :return: a dictionary generator
     """
     for cluster in cluster_generator:
         tips = read_tips(cluster).astype(np.int)
         input_tips = np.array(zip(tips, np.zeros(len(tips))), dtype=np.int)
-        dbscan = DBSCAN(eps=eps, min_samples=min_tips).fit(input_tips)
+        dbscan = DBSCAN(eps=args.eps, min_samples=args.minpts).fit(input_tips)
         cluster["feature"] = np.zeros((cluster["stop"] - cluster["start"]), dtype=bool)
         labels = dbscan.labels_.astype(np.int)
         groups = np.unique(labels)
@@ -465,7 +474,7 @@ def main():
     cluster_generator = split_families(cluster_generator)
     cluster_generator = split_orientation(cluster_generator)
     cluster_generator = filter_unique(cluster_generator, 5)
-    cluster_generator = identify_features_by_dbscan(cluster_generator)
+    cluster_generator = identify_features_by_dbscan(cluster_generator, args)
     feature_generator = extract_features(cluster_generator)
     formatted_features = format_features(feature_generator)
     output_features(formatted_features)
