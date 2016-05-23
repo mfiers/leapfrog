@@ -219,7 +219,7 @@ def split_orientation(cluster_generator):
                 yield child_cluster
 
 
-def filter_unique(cluster_generator, threshold):
+def filter_unique(cluster_generator, args):
     """
     Filters read-clusters by the amount of uniquely mapped reads.
     threshold=args.min_diff
@@ -238,7 +238,7 @@ def filter_unique(cluster_generator, threshold):
                     tag_xs = tag[1]
 
             score = tag_as - tag_xs
-            if score >= threshold:
+            if score >= args.min_diff:
                 unique_reads.append(read)
             else:
                 pass
@@ -473,7 +473,7 @@ def main():
     cluster_generator = extract_references(sam)
     cluster_generator = split_families(cluster_generator)
     cluster_generator = split_orientation(cluster_generator)
-    cluster_generator = filter_unique(cluster_generator, 5)
+    cluster_generator = filter_unique(cluster_generator, args)
     cluster_generator = identify_features_by_dbscan(cluster_generator, args)
     feature_generator = extract_features(cluster_generator)
     formatted_features = format_features(feature_generator)
